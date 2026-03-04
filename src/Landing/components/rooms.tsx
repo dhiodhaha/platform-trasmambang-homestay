@@ -185,11 +185,10 @@ export default function Rooms() {
               </div>
 
               <Link
-                href="https://wa.me/6285117082122?text=Halo%2C%20saya%20dari%20website%20trasmambang.com%0A%0ASaya%20mau%20cek%20ketersediaan%20untuk%20sewa%20rumah%3A%0ATanggal%3A%20%0AJumlah%20malam%3A%20%0AJumlah%20tamu%3A%20"
-                target="_blank"
+                href="/booking"
                 className="inline-flex items-center justify-center gap-2.5 rounded-full bg-[#E8C4A0] text-[#1E1E1F] text-sm font-medium uppercase tracking-wide px-8 py-4 hover:bg-[#ddb78f] transition-colors w-full sm:w-auto"
               >
-                Cek Ketersediaan & Booking via WA
+                Pesan Sekarang
               </Link>
             </div>
           </div>

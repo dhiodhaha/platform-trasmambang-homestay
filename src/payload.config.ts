@@ -4,7 +4,10 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { Bookings } from './collections/Bookings'
+import { BlockedDates } from './collections/BlockedDates'
 import { Categories } from './collections/Categories'
+import { Coupons } from './collections/Coupons'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
@@ -13,7 +16,9 @@ import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { PromoPopup } from './PromoPopup/config'
 import { LinkTree } from './LinkTree/config'
+import { SiteSettings } from './globals/SiteSettings'
 import { plugins } from './plugins'
+import { expireBookingsTask } from './tasks/expireBookings'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
 
@@ -64,9 +69,9 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users],
+  collections: [Pages, Posts, Media, Categories, Users, Bookings, Coupons, BlockedDates],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer, PromoPopup, LinkTree],
+  globals: [Header, Footer, PromoPopup, LinkTree, SiteSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,
@@ -89,6 +94,6 @@ export default buildConfig({
         return authHeader === `Bearer ${secret}`
       },
     },
-    tasks: [],
+    tasks: [expireBookingsTask],
   },
 })
