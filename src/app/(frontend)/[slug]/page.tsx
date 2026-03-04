@@ -66,8 +66,10 @@ export default async function Page({ params: paramsPromise }: Args) {
 
   const { hero, layout } = page
 
+  const isCustomLanding = hero?.type === 'customLanding'
+
   return (
-    <article className="pt-16 pb-24">
+    <article className={isCustomLanding ? '' : 'pt-16 pb-24'}>
       <PageClient />
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />
@@ -75,7 +77,7 @@ export default async function Page({ params: paramsPromise }: Args) {
       {draft && <LivePreviewListener />}
 
       <RenderHero {...hero} />
-      <RenderBlocks blocks={layout} />
+      {!isCustomLanding && <RenderBlocks blocks={layout} />}
     </article>
   )
 }

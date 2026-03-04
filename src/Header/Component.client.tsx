@@ -32,8 +32,16 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
   return (
     <header className="container relative z-20   " {...(theme ? { 'data-theme': theme } : {})}>
       <div className="py-8 flex justify-between">
-        <Link href="/">
-          <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+        <Link href="/" className="flex items-center">
+          {typeof (data as any)?.logo === 'object' && (data as any)?.logo?.url ? (
+            <img
+              src={(data as any).logo.url}
+              alt={(data as any).logo.alt || 'Trasmambang Logo'}
+              className="h-8 max-w-[200px] object-contain"
+            />
+          ) : (
+            <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+          )}
         </Link>
         <HeaderNav data={data} />
       </div>

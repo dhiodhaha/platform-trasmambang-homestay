@@ -24,6 +24,10 @@ export const hero: Field = {
           value: 'none',
         },
         {
+          label: 'Custom Landing',
+          value: 'customLanding',
+        },
+        {
           label: 'High Impact',
           value: 'highImpact',
         },
