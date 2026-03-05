@@ -72,6 +72,9 @@ export interface Config {
     media: Media;
     categories: Category;
     users: User;
+    bookings: Booking;
+    coupons: Coupon;
+    'blocked-dates': BlockedDate;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -94,6 +97,9 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    bookings: BookingsSelect<false> | BookingsSelect<true>;
+    coupons: CouponsSelect<false> | CouponsSelect<true>;
+    'blocked-dates': BlockedDatesSelect<false> | BlockedDatesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -114,12 +120,14 @@ export interface Config {
     footer: Footer;
     'promo-popup': PromoPopup;
     'link-tree': LinkTree;
+    'site-settings': SiteSetting;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'promo-popup': PromoPopupSelect<false> | PromoPopupSelect<true>;
     'link-tree': LinkTreeSelect<false> | LinkTreeSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -128,6 +136,7 @@ export interface Config {
   user: User;
   jobs: {
     tasks: {
+      expireBookings: TaskExpireBookings;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -788,6 +797,92 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings".
+ */
+export interface Booking {
+  id: number;
+  /**
+   * URL-safe unique ID (unguessable)
+   */
+  slugId?: string | null;
+  bookingCode?: string | null;
+  guestName: string;
+  phone: string;
+  email?: string | null;
+  checkIn: string;
+  checkOut: string;
+  numGuests: number;
+  bookingStatus?: ('pending' | 'confirmed' | 'cancelled' | 'expired' | 'completed') | null;
+  paymentStatus?: ('unpaid' | 'transfer_sent' | 'confirmed') | null;
+  totalPrice?: number | null;
+  couponCode?: string | null;
+  discountAmount?: number | null;
+  finalPrice?: number | null;
+  /**
+   * Kode unik 3 digit untuk verifikasi transfer
+   */
+  transferCode?: number | null;
+  /**
+   * Jumlah transfer = finalPrice + transferCode
+   */
+  transferAmount?: number | null;
+  /**
+   * Permintaan khusus dari tamu
+   */
+  notes?: string | null;
+  /**
+   * Catatan internal (tidak terlihat oleh tamu)
+   */
+  internalNotes?: string | null;
+  website?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons".
+ */
+export interface Coupon {
+  id: number;
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  /**
+   * Cap diskon untuk tipe percentage (Rp)
+   */
+  maxDiscountAmount?: number | null;
+  /**
+   * Min malam untuk pakai kupon
+   */
+  minNights?: number | null;
+  /**
+   * Batas pemakaian (kosong = unlimited)
+   */
+  maxUses?: number | null;
+  usedCount?: number | null;
+  validFrom?: string | null;
+  validUntil?: string | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blocked-dates".
+ */
+export interface BlockedDate {
+  id: number;
+  startDate: string;
+  endDate: string;
+  /**
+   * e.g. "Pemakaian pribadi", "Maintenance"
+   */
+  reason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -929,7 +1024,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'schedulePublish';
+        taskSlug: 'inline' | 'expireBookings' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -962,7 +1057,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'expireBookings' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -995,6 +1090,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'bookings';
+        value: number | Booking;
+      } | null)
+    | ({
+        relationTo: 'coupons';
+        value: number | Coupon;
+      } | null)
+    | ({
+        relationTo: 'blocked-dates';
+        value: number | BlockedDate;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1360,6 +1467,62 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookings_select".
+ */
+export interface BookingsSelect<T extends boolean = true> {
+  slugId?: T;
+  bookingCode?: T;
+  guestName?: T;
+  phone?: T;
+  email?: T;
+  checkIn?: T;
+  checkOut?: T;
+  numGuests?: T;
+  bookingStatus?: T;
+  paymentStatus?: T;
+  totalPrice?: T;
+  couponCode?: T;
+  discountAmount?: T;
+  finalPrice?: T;
+  transferCode?: T;
+  transferAmount?: T;
+  notes?: T;
+  internalNotes?: T;
+  website?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons_select".
+ */
+export interface CouponsSelect<T extends boolean = true> {
+  code?: T;
+  discountType?: T;
+  discountValue?: T;
+  maxDiscountAmount?: T;
+  minNights?: T;
+  maxUses?: T;
+  usedCount?: T;
+  validFrom?: T;
+  validUntil?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blocked-dates_select".
+ */
+export interface BlockedDatesSelect<T extends boolean = true> {
+  startDate?: T;
+  endDate?: T;
+  reason?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1823,6 +1986,46 @@ export interface LinkTree {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Harga per malam (Rupiah)
+   */
+  pricePerNight: number;
+  /**
+   * Batas tamu standar (fasilitas handuk)
+   */
+  standardCapacity?: number | null;
+  /**
+   * Batas tamu maksimal (hard limit)
+   */
+  maxCapacity?: number | null;
+  maxBookingNights?: number | null;
+  /**
+   * Booking pending auto-expire setelah X jam
+   */
+  bookingExpiryHours?: number | null;
+  /**
+   * Minimum hari advance booking (0 = sama hari)
+   */
+  minAdvanceDays?: number | null;
+  /**
+   * e.g. BCA, BRI, Mandiri
+   */
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountName?: string | null;
+  /**
+   * Nomor WA owner (format: 6285xxx)
+   */
+  whatsappNumber?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -1932,6 +2135,25 @@ export interface LinkTreeSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  pricePerNight?: T;
+  standardCapacity?: T;
+  maxCapacity?: T;
+  maxBookingNights?: T;
+  bookingExpiryHours?: T;
+  minAdvanceDays?: T;
+  bankName?: T;
+  bankAccountNumber?: T;
+  bankAccountName?: T;
+  whatsappNumber?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -1939,6 +2161,14 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskExpireBookings".
+ */
+export interface TaskExpireBookings {
+  input?: unknown;
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

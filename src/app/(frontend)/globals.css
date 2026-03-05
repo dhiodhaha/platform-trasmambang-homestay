@@ -222,3 +222,9 @@ html[data-theme='dark'],
 html[data-theme='light'] {
   opacity: initial;
 }
+
+@media (max-width: 640px) {
+  .rdp-root {
+    --rdp-cell-size: 11vw; /* Responsive cells on very small mobile */
+  }
+}
