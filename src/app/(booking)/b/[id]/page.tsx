@@ -37,8 +37,8 @@ export default async function BookingConfirmationPage({ params: paramsPromise }:
   const settings = await payload.findGlobal({ slug: 'site-settings' })
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pt-24 pb-20">
-      <div className="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[100dvh] bg-[#F7F6F2] pt-8 pb-24 sm:pt-20 sm:pb-32 selection:bg-[#E8C4A0] selection:text-[#122023]">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 w-full max-w-[1040px]">
         <BookingConfirmation
           booking={{
             slugId: booking.slugId!,
