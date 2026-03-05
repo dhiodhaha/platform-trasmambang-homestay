@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
     "nextjs-best-practices": {
       "source": "sickn33/antigravity-awesome-skills",
       "sourceType": "github",
@@ -10,6 +15,11 @@
       "source": "payloadcms/skills",
       "sourceType": "github",
       "computedHash": "868c518cec5efe3862accee8ef3751b72fac06d7e12a27c263dc17320f27b20c"
+    },
+    "shadcn-ui": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "computedHash": "6ac4f3b3f702e7d81edf883bea1f330bfd6b1b721e876c81642a96edf4c54d75"
     },
     "solid": {
       "source": "ramziddin/solid-skills",

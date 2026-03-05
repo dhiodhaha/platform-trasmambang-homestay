@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { DayPicker, type DateRange } from 'react-day-picker'
-import 'react-day-picker/style.css'
+import { type DateRange } from 'react-day-picker'
 import Link from 'next/link'
+import { AvailabilityCalendar } from '@/components/Calendar'
 
 type UnavailableRange = { start: string; end: string }
 
@@ -20,17 +20,12 @@ export default function AvailabilityWidget() {
       .finally(() => setLoading(false))
   }, [])
 
-  const disabledDays = [
-    { before: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) },
-    ...unavailableDates.map((d) => ({
-      from: new Date(d.start),
-      to: new Date(new Date(d.end).getTime() - 24 * 60 * 60 * 1000),
-    })),
-  ]
+  const formatLocalDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   const bookingUrl =
     range?.from && range?.to
-      ? `/booking?checkIn=${range.from.toISOString().split('T')[0]}&checkOut=${range.to.toISOString().split('T')[0]}`
+      ? `/booking?checkIn=${formatLocalDate(range.from)}&checkOut=${formatLocalDate(range.to)}`
       : '/booking'
 
   return (
@@ -52,26 +47,28 @@ export default function AvailabilityWidget() {
           <p className="text-sm text-white/40">Memuat kalender...</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl bg-white p-4">
-          <DayPicker
-            mode="range"
-            selected={range}
+        <div className="rounded-2xl border border-black/5 bg-[#FAFAFA] p-4 sm:p-5 flex justify-center w-full max-w-[350px] sm:max-w-none mx-auto shadow-sm">
+          <AvailabilityCalendar
+            unavailableDates={unavailableDates}
+            minAdvanceDays={1} // Assuming 1 is default for widget
+            initialRange={range}
             onSelect={setRange}
-            disabled={disabledDays}
-            numberOfMonths={1}
-            showOutsideDays
           />
         </div>
       )}
 
       {range?.from && range?.to && (
-        <p className="text-sm text-white/70">
-          {range.from.toLocaleDateString('id-ID')} — {range.to.toLocaleDateString('id-ID')} (
-          {Math.ceil(
-            (range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24),
-          )}{' '}
-          malam)
-        </p>
+        <div className="text-sm text-white/70 space-y-1">
+          <p>
+            Check-in: <span className="font-medium text-white">{range.from.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </p>
+          <p>
+            Check-out: <span className="font-medium text-white">{range.to.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </p>
+          <p className="text-white/50">
+            untuk {Math.ceil((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24))} malam
+          </p>
+        </div>
       )}
 
       <Link

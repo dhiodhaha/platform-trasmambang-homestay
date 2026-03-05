@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { bookingFormSchema, type BookingFormData } from '@/lib/validations'
-import { AvailabilityCalendar } from './availability-calendar'
+import { AvailabilityCalendar } from '@/components/Calendar'
 import { CouponInput } from './coupon-input'
 import { OrderSummary } from './order-summary'
 
@@ -83,6 +83,9 @@ export function BookingForm({
     discountAmount = Math.min(discountAmount, totalPrice)
   }
 
+  const formatLocalDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
   const finalPrice = totalPrice - discountAmount
 
   const onSubmit = async (formData: BookingFormData) => {
@@ -90,11 +93,17 @@ export function BookingForm({
     setSubmitError(null)
 
     try {
+      // Ensure Payload CMS receives properly formatted ISO 8601 strings with a time component for date fields
+      const checkInISO = new Date(`${formData.checkIn}T12:00:00`).toISOString()
+      const checkOutISO = new Date(`${formData.checkOut}T12:00:00`).toISOString()
+
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          checkIn: checkInISO,
+          checkOut: checkOutISO,
           couponCode: couponDiscount?.code || undefined,
         }),
       })
@@ -119,74 +128,129 @@ export function BookingForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {/* Date Selection */}
-      <section>
-        <h2 className="mb-4 text-xl font-semibold">1. Pilih Tanggal</h2>
+      <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-black/5">
+        <h2
+          className="text-xl font-medium tracking-tight text-[#122023] mb-6 flex items-center gap-3"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+        >
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#E8C4A0] text-[#122023] text-sm font-medium">
+            1
+          </span>
+          Pilih Tanggal
+        </h2>
         <AvailabilityCalendar
           unavailableDates={unavailableDates}
           minAdvanceDays={minAdvanceDays}
           initialRange={
             initialCheckIn && initialCheckOut
-              ? { from: new Date(initialCheckIn), to: new Date(initialCheckOut) }
+              ? { from: new Date(`${initialCheckIn}T00:00:00`), to: new Date(`${initialCheckOut}T00:00:00`) }
               : undefined
           }
           onSelect={(range) => {
-            if (range?.from) setValue('checkIn', range.from.toISOString().split('T')[0])
-            if (range?.to) setValue('checkOut', range.to.toISOString().split('T')[0])
+            if (range?.from) {
+              setValue('checkIn', formatLocalDate(range.from), {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            } else {
+              setValue('checkIn', '', { shouldValidate: true })
+            }
+
+            if (range?.to) {
+              setValue('checkOut', formatLocalDate(range.to), {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            } else {
+              setValue('checkOut', '', { shouldValidate: true })
+            }
           }}
         />
-        {errors.checkIn && <p className="mt-1 text-sm text-red-600">{errors.checkIn.message}</p>}
-        {errors.checkOut && <p className="mt-1 text-sm text-red-600">{errors.checkOut.message}</p>}
+        {errors.checkIn && (
+          <p className="mt-2 text-sm text-red-500 font-medium">{errors.checkIn.message}</p>
+        )}
+        {errors.checkOut && (
+          <p className="mt-2 text-sm text-red-500 font-medium">{errors.checkOut.message}</p>
+        )}
         {checkIn && checkOut && nights > 0 && (
-          <p className="mt-2 text-sm text-gray-600">
-            {nights} malam: {new Date(checkIn).toLocaleDateString('id-ID')} -{' '}
-            {new Date(checkOut).toLocaleDateString('id-ID')}
-          </p>
+          <div className="mt-4 text-sm text-[#6B6B6B] bg-[#F5F5F5] py-3 px-4 rounded-xl space-y-1">
+            <p>
+              Check-in: <span className="font-medium text-[#122023]">{new Date(checkIn).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </p>
+            <p>
+              Check-out: <span className="font-medium text-[#122023]">{new Date(checkOut).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </p>
+            <p className="text-[#9B9B9B]">untuk {nights} malam</p>
+          </div>
         )}
       </section>
 
       {/* Guest Details */}
-      <section>
-        <h2 className="mb-4 text-xl font-semibold">2. Data Tamu</h2>
-        <div className="space-y-4">
+      <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-black/5">
+        <h2
+          className="text-xl font-medium tracking-tight text-[#122023] mb-6 flex items-center gap-3"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+        >
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#E8C4A0] text-[#122023] text-sm font-medium">
+            2
+          </span>
+          Data Tamu
+        </h2>
+
+        <div className="space-y-6">
           <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label className="mb-2 block text-[13px] font-semibold tracking-wide text-[#6B6B6B] uppercase">
               Nama Lengkap <span className="text-red-500">*</span>
             </label>
             <input
               {...register('guestName')}
-              className="w-full rounded-md border px-3 py-2"
-              placeholder="Nama lengkap"
+              className="w-full rounded-2xl border border-black/5 bg-[#F9F9F9] px-5 py-4 text-[15px] font-medium text-[#122023] placeholder:text-black/30 placeholder:font-normal shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:bg-white focus:bg-white focus:border-[#E8C4A0] focus:ring-2 focus:ring-[#E8C4A0]/20 focus:outline-none transition-all duration-300"
+              placeholder="Sesuai KTP"
             />
             {errors.guestName && (
-              <p className="mt-1 text-sm text-red-600">{errors.guestName.message}</p>
+              <p className="mt-2 text-[13px] text-red-500 font-medium flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-red-500"></span> {errors.guestName.message}
+              </p>
             )}
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Nomor WhatsApp <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...register('phone')}
-              className="w-full rounded-md border px-3 py-2"
-              placeholder="08xxxxxxxxxx"
-            />
-            {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+            <div>
+              <label className="mb-2 block text-[13px] font-semibold tracking-wide text-[#6B6B6B] uppercase">
+                Nomor WhatsApp <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register('phone')}
+                className="w-full rounded-2xl border border-black/5 bg-[#F9F9F9] px-5 py-4 text-[15px] font-medium text-[#122023] placeholder:text-black/30 placeholder:font-normal shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:bg-white focus:bg-white focus:border-[#E8C4A0] focus:ring-2 focus:ring-[#E8C4A0]/20 focus:outline-none transition-all duration-300"
+                placeholder="08xxxxxxxxxx"
+              />
+              {errors.phone && (
+                <p className="mt-2 text-[13px] text-red-500 font-medium flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-red-500"></span> {errors.phone.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-[13px] font-semibold tracking-wide text-[#6B6B6B] uppercase">
+                Email (opsional)
+              </label>
+              <input
+                {...register('email')}
+                type="email"
+                className="w-full rounded-2xl border border-black/5 bg-[#F9F9F9] px-5 py-4 text-[15px] font-medium text-[#122023] placeholder:text-black/30 placeholder:font-normal shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:bg-white focus:bg-white focus:border-[#E8C4A0] focus:ring-2 focus:ring-[#E8C4A0]/20 focus:outline-none transition-all duration-300"
+                placeholder="email@contoh.com"
+              />
+              {errors.email && (
+                <p className="mt-2 text-[13px] text-red-500 font-medium flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-red-500"></span> {errors.email.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Email (opsional)</label>
-            <input
-              {...register('email')}
-              type="email"
-              className="w-full rounded-md border px-3 py-2"
-              placeholder="email@contoh.com"
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">
+            <label className="mb-2 block text-[13px] font-semibold tracking-wide text-[#6B6B6B] uppercase">
               Jumlah Tamu <span className="text-red-500">*</span>
             </label>
             <input
@@ -194,37 +258,52 @@ export function BookingForm({
               type="number"
               min={1}
               max={maxCapacity}
-              className="w-full rounded-md border px-3 py-2"
+              className="w-full sm:w-1/2 rounded-2xl border border-black/5 bg-[#F9F9F9] px-5 py-4 text-[15px] font-medium text-[#122023] placeholder:text-black/30 placeholder:font-normal shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:bg-white focus:bg-white focus:border-[#E8C4A0] focus:ring-2 focus:ring-[#E8C4A0]/20 focus:outline-none transition-all duration-300"
             />
             {errors.numGuests && (
-              <p className="mt-1 text-sm text-red-600">{errors.numGuests.message}</p>
+              <p className="mt-2 text-[13px] text-red-500 font-medium flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-red-500"></span> {errors.numGuests.message}
+              </p>
             )}
             {numGuests > standardCapacity && numGuests <= maxCapacity && (
-              <p className="mt-1 text-sm text-amber-600">
-                Melebihi {standardCapacity} tamu, lebih dari {standardCapacity} tamu tidak mendapat
-                fasilitas handuk
-              </p>
+              <div className="mt-3 flex items-start gap-2.5 bg-[#FFF9F0] border border-[#E8C4A0]/30 px-4 py-3 rounded-xl">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#E8C4A0] mt-1.5 shrink-0"></div>
+                <p className="text-[13px] text-[#8C6D4A] leading-relaxed">
+                  Melebihi kapasitas ideal ({standardCapacity} tamu). Lebih dari batas ini tidak
+                  mendapat fasilitas ekstra.
+                </p>
+              </div>
             )}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Permintaan Khusus (opsional)</label>
+            <label className="mb-2 block text-[13px] font-semibold tracking-wide text-[#6B6B6B] uppercase">
+              Permintaan Khusus (opsional)
+            </label>
             <textarea
               {...register('notes')}
-              className="w-full rounded-md border px-3 py-2"
+              className="w-full rounded-2xl border border-black/5 bg-[#F9F9F9] px-5 py-4 text-[15px] font-medium text-[#122023] placeholder:text-black/30 placeholder:font-normal shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:bg-white focus:bg-white focus:border-[#E8C4A0] focus:ring-2 focus:ring-[#E8C4A0]/20 focus:outline-none transition-all duration-300 resize-none"
               rows={3}
-              placeholder="Catatan tambahan..."
+              placeholder="Catatan tambahan seperti detail check-in..."
             />
           </div>
         </div>
       </section>
 
       {/* Order Summary */}
-      <section>
-        <h2 className="mb-4 text-xl font-semibold">3. Ringkasan Pesanan</h2>
+      <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-black/5">
+        <h2
+          className="text-xl font-medium tracking-tight text-[#122023] mb-6 flex items-center gap-3"
+          style={{ fontFamily: 'var(--font-geist-sans)' }}
+        >
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#E8C4A0] text-[#122023] text-sm font-medium">
+            3
+          </span>
+          Ringkasan Pesanan
+        </h2>
 
-        {nights > 0 && (
-          <>
+        {nights > 0 ? (
+          <div className="space-y-6">
             <CouponInput
               nights={nights}
               onApply={(discount) => {
@@ -237,27 +316,37 @@ export function BookingForm({
               }}
             />
 
-            <OrderSummary
-              pricePerNight={pricePerNight}
-              nights={nights}
-              totalPrice={totalPrice}
-              discountAmount={discountAmount}
-              couponCode={couponDiscount?.code}
-              finalPrice={finalPrice}
-            />
-          </>
-        )}
-
-        {nights <= 0 && (
-          <p className="text-sm text-gray-500">Pilih tanggal terlebih dahulu untuk melihat harga.</p>
+            <div className="pt-2">
+              <OrderSummary
+                pricePerNight={pricePerNight}
+                nights={nights}
+                totalPrice={totalPrice}
+                discountAmount={discountAmount}
+                couponCode={couponDiscount?.code}
+                finalPrice={finalPrice}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="bg-[#FAFAFA] border border-black/5 rounded-2xl p-6 text-center">
+            <p className="text-sm text-[#6B6B6B]">
+              Pilih tanggal di atas terlebih dahulu untuk melihat ringkasan harga.
+            </p>
+          </div>
         )}
       </section>
 
       {/* Honeypot */}
-      <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input
+        type="text"
+        name="website"
+        style={{ display: 'none' }}
+        tabIndex={-1}
+        autoComplete="off"
+      />
 
       {submitError && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 font-medium text-center">
           {submitError}
         </div>
       )}
@@ -265,9 +354,9 @@ export function BookingForm({
       <button
         type="submit"
         disabled={isSubmitting || nights <= 0}
-        className="w-full rounded-md bg-green-600 px-6 py-3 text-lg font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-full bg-[#E8C4A0] px-8 py-5 text-center text-sm font-semibold uppercase tracking-widest text-[#122023] transition-colors hover:bg-[#ddb78f] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
       >
-        {isSubmitting ? 'Mengirim...' : 'Kirim Booking'}
+        {isSubmitting ? 'Memproses...' : 'Lanjutkan Pemesanan'}
       </button>
     </form>
   )

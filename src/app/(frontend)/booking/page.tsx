@@ -37,20 +37,31 @@ export default async function BookingPage({ searchParams: searchParamsPromise }:
   ]
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-12">
-      <h1 className="mb-2 text-3xl font-bold">Pesan Kamar</h1>
-      <p className="mb-8 text-gray-600">
-        Pilih tanggal dan isi data diri untuk memesan Trasmambang Homestay.
-      </p>
-      <BookingForm
-        pricePerNight={settings.pricePerNight || 0}
-        standardCapacity={settings.standardCapacity || 8}
-        maxCapacity={settings.maxCapacity || 12}
-        minAdvanceDays={settings.minAdvanceDays || 1}
-        unavailableDates={unavailableDates}
-        initialCheckIn={searchParams.checkIn}
-        initialCheckOut={searchParams.checkOut}
-      />
+    <div className="min-h-screen bg-[#FAFAFA] pt-24 pb-20">
+      <div className="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header Title */}
+        <div className="mb-10 text-center">
+          <h1
+            className="text-4xl md:text-5xl font-medium tracking-[-0.03em] text-[#122023]"
+            style={{ fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Selesaikan Pemesanan
+          </h1>
+          <p className="mt-3 text-lg text-[#6B6B6B]">
+            Hanya beberapa langkah lagi untuk menginap di Trasmambang.
+          </p>
+        </div>
+
+        <BookingForm
+          pricePerNight={settings.pricePerNight || 0}
+          standardCapacity={settings.standardCapacity || 8}
+          maxCapacity={settings.maxCapacity || 12}
+          minAdvanceDays={settings.minAdvanceDays || 1}
+          unavailableDates={unavailableDates}
+          initialCheckIn={searchParams.checkIn}
+          initialCheckOut={searchParams.checkOut}
+        />
+      </div>
     </div>
   )
 }

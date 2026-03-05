@@ -63,40 +63,66 @@ export function CouponInput({ nights, onApply, onRemove }: Props) {
 
   if (applied) {
     return (
-      <div className="mb-4 flex items-center gap-2 rounded-md bg-green-50 p-3">
-        <span className="text-sm font-medium text-green-700">Kupon {applied} diterapkan</span>
+      <div className="mb-6 flex items-center justify-between rounded-2xl bg-white shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#E8C4A0]/30 p-4 sm:p-5 transition-all animate-in fade-in zoom-in-95 duration-300">
+        <span className="text-[15px] font-medium text-[#122023] flex items-center gap-3">
+          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#E8C4A0]/20 text-[#8C6D4A]">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          Promo{' '}
+          <span className="font-bold tracking-tight bg-[#F5F5F5] px-2 py-0.5 rounded-md uppercase">
+            {applied}
+          </span>{' '}
+          berhasil dipakai
+        </span>
         <button
           type="button"
           onClick={handleRemove}
-          className="ml-auto text-sm text-red-500 hover:underline"
+          className="text-sm text-red-500 hover:text-red-700 font-semibold transition-colors bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg"
         >
-          Hapus
+          Batalkan
         </button>
       </div>
     )
   }
 
   return (
-    <div className="mb-4">
-      <label className="mb-1 block text-sm font-medium">Punya kode kupon?</label>
-      <div className="flex gap-2">
+    <div className="mb-6">
+      <label className="mb-2 block text-[13px] font-semibold tracking-wide text-[#6B6B6B] uppercase">
+        Punya kode promo?
+      </label>
+      <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="Masukkan kode kupon"
-          className="flex-1 rounded-md border px-3 py-2 text-sm"
+          placeholder="CONTOH: MANTAP10"
+          className="flex-1 rounded-2xl border border-black/5 bg-[#F9F9F9] px-5 py-4 text-[15px] font-medium text-[#122023] placeholder:text-black/30 placeholder:font-normal shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] hover:bg-white focus:bg-white focus:border-[#E8C4A0] focus:ring-2 focus:ring-[#E8C4A0]/20 focus:outline-none transition-all duration-300 uppercase"
         />
         <button
           type="button"
           onClick={handleApply}
           disabled={loading || !code.trim()}
-          className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-900 disabled:opacity-50"
+          className="rounded-2xl bg-[#122023] px-8 py-4 text-[15px] font-semibold tracking-wide text-white hover:bg-black focus:ring-4 focus:ring-black/10 disabled:opacity-40 disabled:hover:bg-[#122023] transition-all duration-300 w-full sm:w-auto text-center shadow-[0_4px_14px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] active:scale-[0.98]"
         >
-          {loading ? '...' : 'Pakai'}
+          {loading ? 'Memvalidasi...' : 'Gunakan'}
         </button>
       </div>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-3 text-[13px] text-red-500 font-medium flex items-center gap-1.5 animate-in slide-in-from-top-1 duration-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> {error}
+        </p>
+      )}
     </div>
   )
 }
