@@ -1,10 +1,6 @@
 import type { CollectionBeforeValidateHook } from 'payload'
 
-export const calculatePricing: CollectionBeforeValidateHook = async ({
-  data,
-  operation,
-  req,
-}) => {
+export const calculatePricing: CollectionBeforeValidateHook = async ({ data, operation, req }) => {
   if (operation !== 'create' || !data?.checkIn || !data?.checkOut) return data
 
   const settings = await req.payload.findGlobal({ slug: 'site-settings' })
@@ -42,7 +38,9 @@ export const calculatePricing: CollectionBeforeValidateHook = async ({
     data.discountAmount = 0
   }
 
-  data.finalPrice = data.totalPrice - (data.discountAmount || 0)
+  // Round finalPrice down to nearest 1000 before adding transfer code
+  // This ensures the last 3 digits of transferAmount are accurately reflected by the code
+  data.finalPrice = Math.floor((data.totalPrice - (data.discountAmount || 0)) / 1000) * 1000
 
   // Generate unique 3-digit transfer code for payment verification
   const transferCode = Math.floor(Math.random() * 900) + 100 // 100-999

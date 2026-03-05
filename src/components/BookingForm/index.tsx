@@ -48,6 +48,7 @@ export function BookingForm({
     handleSubmit,
     setValue,
     watch,
+    setError,
     formState: { errors },
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
@@ -89,7 +90,7 @@ export function BookingForm({
   const formatLocalDate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-  const finalPrice = totalPrice - discountAmount
+  const finalPrice = Math.floor((totalPrice - discountAmount) / 1000) * 1000
 
   const onSubmit = async (formData: BookingFormData) => {
     setIsSubmitting(true)
@@ -113,8 +114,23 @@ export function BookingForm({
 
       if (!res.ok) {
         const err = await res.json()
-        const message =
-          err?.errors?.[0]?.message || err?.message || 'Terjadi kesalahan, silakan coba lagi'
+
+        // Handle Payload ValidationError by mapping to fields
+        if (err?.errors && Array.isArray(err.errors)) {
+          let hasMappedError = false
+          err.errors.forEach((e: any) => {
+            if (e.path) {
+              setError(e.path as any, { type: 'manual', message: e.message })
+              hasMappedError = true
+            }
+          })
+          if (hasMappedError) {
+            setShowReview(false) // Go back to form to show field errors
+            return
+          }
+        }
+
+        const message = err?.message || 'Terjadi kesalahan, silakan coba lagi'
         setSubmitError(message)
         return
       }
@@ -165,11 +181,21 @@ export function BookingForm({
               )}
               <span className="text-[#6B6B6B]">Check-in</span>
               <span className="font-medium text-[#122023]">
-                {new Date(watchedData.checkIn).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(watchedData.checkIn).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
               </span>
               <span className="text-[#6B6B6B]">Check-out</span>
               <span className="font-medium text-[#122023]">
-                {new Date(watchedData.checkOut).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(watchedData.checkOut).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
               </span>
               <span className="text-[#6B6B6B]">Durasi</span>
               <span className="font-medium text-[#122023]">{nights} malam</span>
@@ -246,7 +272,10 @@ export function BookingForm({
           minAdvanceDays={minAdvanceDays}
           initialRange={
             initialCheckIn && initialCheckOut
-              ? { from: new Date(`${initialCheckIn}T00:00:00`), to: new Date(`${initialCheckOut}T00:00:00`) }
+              ? {
+                  from: new Date(`${initialCheckIn}T00:00:00`),
+                  to: new Date(`${initialCheckOut}T00:00:00`),
+                }
               : undefined
           }
           onSelect={(range) => {
@@ -278,10 +307,26 @@ export function BookingForm({
         {checkIn && checkOut && nights > 0 && (
           <div className="mt-4 text-sm text-[#6B6B6B] bg-[#F5F5F5] py-3 px-4 rounded-xl space-y-1">
             <p>
-              Check-in: <span className="font-medium text-[#122023]">{new Date(checkIn).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              Check-in:{' '}
+              <span className="font-medium text-[#122023]">
+                {new Date(checkIn).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </span>
             </p>
             <p>
-              Check-out: <span className="font-medium text-[#122023]">{new Date(checkOut).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              Check-out:{' '}
+              <span className="font-medium text-[#122023]">
+                {new Date(checkOut).toLocaleDateString('id-ID', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </span>
             </p>
             <p className="text-[#9B9B9B]">untuk {nights} malam</p>
           </div>
