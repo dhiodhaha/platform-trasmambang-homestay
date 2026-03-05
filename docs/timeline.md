@@ -78,7 +78,7 @@ Month 1        Month 2              Month 3
 
 ---
 
-## Phase 3 — /links Page 
+## Phase 3 — /links Page
 
 **Duration: 3–4 days**
 **Start: Week 3 (can overlap with Phase 2 end)**
@@ -86,7 +86,7 @@ Month 1        Month 2              Month 3
 | Day | Task | Checklist |
 | ----- | ------ | ----------- |
 | 21 | Build `/links` page layout (mobile-first) | [✅DONE] |
-| 22 | Connect to Payload `links` collection (dynamic, ordered) |[✅DONE] |
+| 22 | Connect to Payload `links` collection (dynamic, ordered) | [✅DONE] |
 | 23 | Add announcement banner support | NOT YET |
 | 24 | Populate initial links in Payload, onboard brother | NOT YET |
 
@@ -154,7 +154,7 @@ Month 1        Month 2              Month 3
 ## Future Phases (No Timeline)
 
 | Phase | Feature | Checklist |
-|-------|---------|-----------|
+| ------- | --------- | ----------- |
 | 6 | Online payment — Midtrans / Xendit | NOT YET |
 | 7 | Automated WhatsApp replies | NOT YET |
 | 8 | Email confirmations via Resend | NOT YET |
