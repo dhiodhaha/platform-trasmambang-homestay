@@ -41,6 +41,13 @@ export const Bookings: CollectionConfig = {
   fields: [
     // Booking Identification
     {
+      name: 'slugId',
+      type: 'text',
+      unique: true,
+      index: true,
+      admin: { readOnly: true, position: 'sidebar', description: 'URL-safe unique ID (unguessable)' },
+    },
+    {
       name: 'bookingCode',
       type: 'text',
       unique: true,
@@ -104,6 +111,8 @@ export const Bookings: CollectionConfig = {
       admin: { readOnly: true },
     },
     { name: 'finalPrice', type: 'number', admin: { readOnly: true } },
+    { name: 'transferCode', type: 'number', admin: { readOnly: true, description: 'Kode unik 3 digit untuk verifikasi transfer' } },
+    { name: 'transferAmount', type: 'number', admin: { readOnly: true, description: 'Jumlah transfer = finalPrice + transferCode' } },
     // Notes
     {
       name: 'notes',

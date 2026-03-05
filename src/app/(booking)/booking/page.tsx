@@ -60,6 +60,7 @@ export default async function BookingPage({ searchParams: searchParamsPromise }:
           unavailableDates={unavailableDates}
           initialCheckIn={searchParams.checkIn}
           initialCheckOut={searchParams.checkOut}
+          bookingExpiryHours={settings.bookingExpiryHours || 24}
         />
       </div>
     </div>

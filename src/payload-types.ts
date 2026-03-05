@@ -801,6 +801,10 @@ export interface Form {
  */
 export interface Booking {
   id: number;
+  /**
+   * URL-safe unique ID (unguessable)
+   */
+  slugId?: string | null;
   bookingCode?: string | null;
   guestName: string;
   phone: string;
@@ -814,6 +818,14 @@ export interface Booking {
   couponCode?: string | null;
   discountAmount?: number | null;
   finalPrice?: number | null;
+  /**
+   * Kode unik 3 digit untuk verifikasi transfer
+   */
+  transferCode?: number | null;
+  /**
+   * Jumlah transfer = finalPrice + transferCode
+   */
+  transferAmount?: number | null;
   /**
    * Permintaan khusus dari tamu
    */
@@ -1461,6 +1473,7 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "bookings_select".
  */
 export interface BookingsSelect<T extends boolean = true> {
+  slugId?: T;
   bookingCode?: T;
   guestName?: T;
   phone?: T;
@@ -1474,6 +1487,8 @@ export interface BookingsSelect<T extends boolean = true> {
   couponCode?: T;
   discountAmount?: T;
   finalPrice?: T;
+  transferCode?: T;
+  transferAmount?: T;
   notes?: T;
   internalNotes?: T;
   website?: T;

@@ -1,10 +1,13 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type BookingData = {
+  slugId: string
   bookingCode: string
   guestName: string
+  phone: string
   checkIn: string
   checkOut: string
   numGuests: number
@@ -14,6 +17,8 @@ type BookingData = {
   discountAmount: number
   couponCode?: string
   finalPrice: number
+  transferCode?: number
+  transferAmount?: number
   createdAt: string
 }
 
@@ -44,20 +49,60 @@ const STATUS_LABELS: Record<string, string> = {
   completed: 'Selesai',
 }
 
+function clearPendingBookingCookie() {
+  document.cookie = 'pending_booking=; path=/; max-age=0'
+}
+
 export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours }: Props) {
+  const router = useRouter()
+  const [isCancelling, setIsCancelling] = useState(false)
+
   const deadline = new Date(new Date(booking.createdAt).getTime() + expiryHours * 60 * 60 * 1000)
   const nights = Math.ceil(
     (new Date(booking.checkOut).getTime() - new Date(booking.checkIn).getTime()) /
       (1000 * 60 * 60 * 24),
   )
 
+  const displayAmount = booking.transferAmount ?? booking.finalPrice
+
+  const domain = typeof window !== 'undefined' ? window.location.origin : ''
+  const paymentUrl = `${domain}/b/${booking.slugId}`
+
   const waMessage = encodeURIComponent(
-    `Halo, saya sudah transfer untuk booking ${booking.bookingCode}`,
+    [
+      `Halo, saya sudah transfer untuk booking *${booking.bookingCode}*`,
+      `Nama: ${booking.guestName}`,
+      `Jumlah transfer: ${formatRupiah(displayAmount)}`,
+      `Link: ${paymentUrl}`,
+    ].join('\n'),
   )
   const waLink = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${waMessage}` : ''
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
+  }
+
+  const handleCancel = async () => {
+    if (!confirm('Yakin ingin membatalkan booking ini?')) return
+    setIsCancelling(true)
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slugId: booking.slugId }),
+      })
+      if (res.ok) {
+        clearPendingBookingCookie()
+        router.push('/booking')
+      } else {
+        const err = await res.json()
+        alert(err.message || 'Gagal membatalkan booking')
+      }
+    } catch {
+      alert('Gagal membatalkan booking. Periksa koneksi internet Anda.')
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
   return (
@@ -102,16 +147,21 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
               <p className="text-sm text-gray-600">Jumlah Transfer</p>
               <div className="flex items-center gap-2">
                 <p className="text-xl font-bold text-green-700">
-                  {formatRupiah(booking.finalPrice)}
+                  {formatRupiah(displayAmount)}
                 </p>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard(String(booking.finalPrice))}
+                  onClick={() => copyToClipboard(String(displayAmount))}
                   className="rounded bg-white px-2 py-1 text-xs text-gray-600 shadow-sm hover:bg-gray-50"
                 >
                   Salin
                 </button>
               </div>
+              {booking.transferCode && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Pastikan transfer tepat sesuai nominal di atas (termasuk 3 digit terakhir) untuk verifikasi otomatis.
+                </p>
+              )}
             </div>
             <div className="border-t pt-3">
               <p className="text-sm text-amber-700">
@@ -171,6 +221,18 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
             <span>Total</span>
             <span>{formatRupiah(booking.finalPrice)}</span>
           </div>
+          {booking.transferCode && (
+            <>
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>Kode unik</span>
+                <span>+{formatRupiah(booking.transferCode)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold text-green-700">
+                <span>Jumlah Transfer</span>
+                <span>{formatRupiah(displayAmount)}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -180,10 +242,23 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={clearPendingBookingCookie}
           className="block w-full rounded-md bg-green-600 px-6 py-3 text-center text-lg font-semibold text-white transition hover:bg-green-700"
         >
-          Konfirmasi via WhatsApp
+          Sudah Transfer &amp; Konfirmasi via WA
         </a>
+      )}
+
+      {/* Cancel Button */}
+      {booking.bookingStatus === 'pending' && (
+        <button
+          type="button"
+          onClick={handleCancel}
+          disabled={isCancelling}
+          className="block w-full rounded-md border border-red-200 px-6 py-3 text-center text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+        >
+          {isCancelling ? 'Membatalkan...' : 'Batalkan Booking'}
+        </button>
       )}
     </div>
   )

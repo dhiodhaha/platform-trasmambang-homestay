@@ -17,6 +17,7 @@ type Props = {
   unavailableDates: Array<{ start: string; end: string }>
   initialCheckIn?: string
   initialCheckOut?: string
+  bookingExpiryHours?: number
 }
 
 type CouponDiscount = {
@@ -34,11 +35,13 @@ export function BookingForm({
   initialCheckOut,
   minAdvanceDays,
   unavailableDates,
+  bookingExpiryHours = 24,
 }: Props) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [couponDiscount, setCouponDiscount] = useState<CouponDiscount | null>(null)
+  const [showReview, setShowReview] = useState(false)
 
   const {
     register,
@@ -117,7 +120,10 @@ export function BookingForm({
       }
 
       const booking = await res.json()
-      router.push(`/booking/${booking.doc.bookingCode}`)
+      // Set pending booking cookie
+      const maxAge = bookingExpiryHours * 3600
+      document.cookie = `pending_booking=${booking.doc.slugId}; path=/; max-age=${maxAge}`
+      router.push(`/b/${booking.doc.slugId}`)
     } catch {
       setSubmitError('Gagal mengirim booking. Periksa koneksi internet Anda.')
     } finally {
@@ -125,8 +131,105 @@ export function BookingForm({
     }
   }
 
+  const watchedData = watch()
+
+  const handleReviewSubmit = (formData: BookingFormData) => {
+    if (!showReview) {
+      setShowReview(true)
+      return
+    }
+    onSubmit(formData)
+  }
+
+  if (showReview) {
+    return (
+      <div className="space-y-8">
+        <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-black/5">
+          <h2
+            className="text-xl font-medium tracking-tight text-[#122023] mb-6"
+            style={{ fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Konfirmasi Pemesanan
+          </h2>
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-2 gap-y-3">
+              <span className="text-[#6B6B6B]">Nama</span>
+              <span className="font-medium text-[#122023]">{watchedData.guestName}</span>
+              <span className="text-[#6B6B6B]">WhatsApp</span>
+              <span className="font-medium text-[#122023]">{watchedData.phone}</span>
+              {watchedData.email && (
+                <>
+                  <span className="text-[#6B6B6B]">Email</span>
+                  <span className="font-medium text-[#122023]">{watchedData.email}</span>
+                </>
+              )}
+              <span className="text-[#6B6B6B]">Check-in</span>
+              <span className="font-medium text-[#122023]">
+                {new Date(watchedData.checkIn).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              <span className="text-[#6B6B6B]">Check-out</span>
+              <span className="font-medium text-[#122023]">
+                {new Date(watchedData.checkOut).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              </span>
+              <span className="text-[#6B6B6B]">Durasi</span>
+              <span className="font-medium text-[#122023]">{nights} malam</span>
+              <span className="text-[#6B6B6B]">Jumlah Tamu</span>
+              <span className="font-medium text-[#122023]">{watchedData.numGuests} orang</span>
+            </div>
+            {watchedData.notes && (
+              <div className="pt-2 border-t border-black/5">
+                <p className="text-[#6B6B6B] mb-1">Permintaan Khusus</p>
+                <p className="text-[#122023]">{watchedData.notes}</p>
+              </div>
+            )}
+            <div className="pt-2 border-t border-black/5 space-y-1">
+              <div className="flex justify-between">
+                <span className="text-[#6B6B6B]">Subtotal</span>
+                <span>Rp{totalPrice.toLocaleString('id-ID')}</span>
+              </div>
+              {discountAmount > 0 && couponDiscount && (
+                <div className="flex justify-between text-green-600">
+                  <span>Diskon ({couponDiscount.code})</span>
+                  <span>-Rp{discountAmount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-lg font-bold text-[#122023]">
+                <span>Total</span>
+                <span>Rp{finalPrice.toLocaleString('id-ID')}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {submitError && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 font-medium text-center">
+            {submitError}
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setShowReview(false)}
+            className="flex-1 rounded-full border border-black/10 px-8 py-5 text-center text-sm font-semibold uppercase tracking-widest text-[#122023] transition-colors hover:bg-black/5"
+          >
+            Kembali
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+            className="flex-1 rounded-full bg-[#E8C4A0] px-8 py-5 text-center text-sm font-semibold uppercase tracking-widest text-[#122023] transition-colors hover:bg-[#ddb78f] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+          >
+            {isSubmitting ? 'Memproses...' : 'Konfirmasi & Booking'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(handleReviewSubmit)} className="space-y-8">
       {/* Date Selection */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-black/5">
         <h2
@@ -356,7 +459,7 @@ export function BookingForm({
         disabled={isSubmitting || nights <= 0}
         className="w-full rounded-full bg-[#E8C4A0] px-8 py-5 text-center text-sm font-semibold uppercase tracking-widest text-[#122023] transition-colors hover:bg-[#ddb78f] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
       >
-        {isSubmitting ? 'Memproses...' : 'Lanjutkan Pemesanan'}
+        {isSubmitting ? 'Memproses...' : 'Review Pemesanan'}
       </button>
     </form>
   )

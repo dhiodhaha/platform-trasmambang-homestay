@@ -7,12 +7,20 @@ import { AvailabilityCalendar } from '@/components/Calendar'
 
 type UnavailableRange = { start: string; end: string }
 
+function getPendingBookingId(): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/(?:^|;\s*)pending_booking=([^;]+)/)
+  return match ? match[1] : null
+}
+
 export default function AvailabilityWidget() {
   const [unavailableDates, setUnavailableDates] = useState<UnavailableRange[]>([])
   const [range, setRange] = useState<DateRange | undefined>()
   const [loading, setLoading] = useState(true)
+  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null)
 
   useEffect(() => {
+    setPendingBookingId(getPendingBookingId())
     fetch('/api/availability')
       .then((res) => res.json())
       .then((data) => setUnavailableDates(data.unavailableDates || []))
@@ -27,6 +35,30 @@ export default function AvailabilityWidget() {
     range?.from && range?.to
       ? `/booking?checkIn=${formatLocalDate(range.from)}&checkOut=${formatLocalDate(range.to)}`
       : '/booking'
+
+  if (pendingBookingId) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3
+            className="mb-2 text-2xl font-normal tracking-[-0.02em] text-white"
+            style={{ fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Booking Menunggu Pembayaran
+          </h3>
+          <p className="text-sm text-white/50">
+            Anda memiliki booking yang belum dibayar. Selesaikan pembayaran sebelum batas waktu.
+          </p>
+        </div>
+        <Link
+          href={`/b/${pendingBookingId}`}
+          className="block w-full rounded-full bg-[#E8C4A0] px-8 py-4 text-center text-sm font-medium uppercase tracking-wide text-[#122023] transition-colors hover:bg-[#ddb78f]"
+        >
+          Selesaikan Pembayaran
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

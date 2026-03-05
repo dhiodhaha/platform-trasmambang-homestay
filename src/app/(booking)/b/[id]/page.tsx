@@ -4,36 +4,46 @@ import config from '@payload-config'
 import { notFound } from 'next/navigation'
 import { BookingConfirmation } from './BookingConfirmation'
 
-type Args = { params: Promise<{ bookingCode: string }> }
+type Args = { params: Promise<{ id: string }> }
+
+async function findBookingBySlug(slugId: string) {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'bookings',
+    where: { slugId: { equals: slugId } },
+    limit: 1,
+  })
+  return docs[0] ?? null
+}
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
-  const { bookingCode } = await paramsPromise
+  const { id } = await paramsPromise
+  const booking = await findBookingBySlug(id)
+
   return {
-    title: `Booking ${bookingCode} - Trasmambang Homestay`,
+    title: booking
+      ? `Booking ${booking.bookingCode} - Trasmambang Homestay`
+      : 'Booking - Trasmambang Homestay',
   }
 }
 
 export default async function BookingConfirmationPage({ params: paramsPromise }: Args) {
-  const { bookingCode } = await paramsPromise
-  const payload = await getPayload({ config })
+  const { id: slugId } = await paramsPromise
+  const booking = await findBookingBySlug(slugId)
 
-  const { docs } = await payload.find({
-    collection: 'bookings',
-    where: { bookingCode: { equals: bookingCode } },
-    limit: 1,
-  })
-
-  const booking = docs[0]
   if (!booking) return notFound()
 
+  const payload = await getPayload({ config })
   const settings = await payload.findGlobal({ slug: 'site-settings' })
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-12">
       <BookingConfirmation
         booking={{
+          slugId: booking.slugId!,
           bookingCode: booking.bookingCode!,
           guestName: booking.guestName,
+          phone: booking.phone,
           checkIn: booking.checkIn,
           checkOut: booking.checkOut,
           numGuests: booking.numGuests,
@@ -43,6 +53,8 @@ export default async function BookingConfirmationPage({ params: paramsPromise }:
           discountAmount: booking.discountAmount ?? 0,
           couponCode: booking.couponCode ?? undefined,
           finalPrice: booking.finalPrice ?? 0,
+          transferCode: booking.transferCode ?? undefined,
+          transferAmount: booking.transferAmount ?? undefined,
           createdAt: booking.createdAt,
         }}
         bank={{

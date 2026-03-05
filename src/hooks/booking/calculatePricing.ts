@@ -43,5 +43,11 @@ export const calculatePricing: CollectionBeforeValidateHook = async ({
   }
 
   data.finalPrice = data.totalPrice - (data.discountAmount || 0)
+
+  // Generate unique 3-digit transfer code for payment verification
+  const transferCode = Math.floor(Math.random() * 900) + 100 // 100-999
+  data.transferCode = transferCode
+  data.transferAmount = data.finalPrice + transferCode
+
   return data
 }

@@ -32,7 +32,24 @@ export function AvailabilityCalendar({
     })),
   ]
 
+  const rangeContainsDisabledDate = (from: Date, to: Date): boolean => {
+    for (const d of unavailableDates) {
+      const blockedStart = new Date(`${d.start}T00:00:00`)
+      const blockedEnd = new Date(`${d.end}T00:00:00`)
+      // Overlap check: blocked range [blockedStart, blockedEnd) overlaps [from, to]
+      if (blockedStart < to && blockedEnd > from) return true
+    }
+    return false
+  }
+
   const handleSelect = (newRange: DateRange | undefined) => {
+    // If both dates selected, check if range spans across a disabled date
+    if (newRange?.from && newRange?.to && rangeContainsDisabledDate(newRange.from, newRange.to)) {
+      // Reset to just the new "to" date as a new start
+      setRange({ from: newRange.to, to: undefined })
+      onSelect({ from: newRange.to, to: undefined })
+      return
+    }
     setRange(newRange)
     onSelect(newRange)
   }
