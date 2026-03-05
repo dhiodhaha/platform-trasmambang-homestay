@@ -37,34 +37,36 @@ export default async function BookingConfirmationPage({ params: paramsPromise }:
   const settings = await payload.findGlobal({ slug: 'site-settings' })
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-12">
-      <BookingConfirmation
-        booking={{
-          slugId: booking.slugId!,
-          bookingCode: booking.bookingCode!,
-          guestName: booking.guestName,
-          phone: booking.phone,
-          checkIn: booking.checkIn,
-          checkOut: booking.checkOut,
-          numGuests: booking.numGuests,
-          bookingStatus: booking.bookingStatus!,
-          paymentStatus: booking.paymentStatus!,
-          totalPrice: booking.totalPrice ?? 0,
-          discountAmount: booking.discountAmount ?? 0,
-          couponCode: booking.couponCode ?? undefined,
-          finalPrice: booking.finalPrice ?? 0,
-          transferCode: booking.transferCode ?? undefined,
-          transferAmount: booking.transferAmount ?? undefined,
-          createdAt: booking.createdAt,
-        }}
-        bank={{
-          name: settings.bankName || '-',
-          accountNumber: settings.bankAccountNumber || '-',
-          accountName: settings.bankAccountName || '-',
-        }}
-        whatsappNumber={settings.whatsappNumber || ''}
-        expiryHours={settings.bookingExpiryHours || 24}
-      />
+    <div className="min-h-screen bg-[#FAFAFA] pt-24 pb-20">
+      <div className="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8">
+        <BookingConfirmation
+          booking={{
+            slugId: booking.slugId!,
+            bookingCode: booking.bookingCode!,
+            guestName: booking.guestName,
+            phone: booking.phone,
+            checkIn: booking.checkIn,
+            checkOut: booking.checkOut,
+            numGuests: booking.numGuests,
+            bookingStatus: booking.bookingStatus!,
+            paymentStatus: booking.paymentStatus!,
+            totalPrice: booking.totalPrice ?? 0,
+            discountAmount: booking.discountAmount ?? 0,
+            couponCode: booking.couponCode ?? undefined,
+            finalPrice: booking.finalPrice ?? 0,
+            transferCode: booking.transferCode ?? undefined,
+            transferAmount: booking.transferAmount ?? undefined,
+            createdAt: booking.createdAt,
+          }}
+          bank={{
+            name: settings.bankName || '-',
+            accountNumber: settings.bankAccountNumber || '-',
+            accountName: settings.bankAccountName || '-',
+          }}
+          whatsappNumber={settings.whatsappNumber || ''}
+          expiryHours={settings.bookingExpiryHours || 24}
+        />
+      </div>
     </div>
   )
 }
