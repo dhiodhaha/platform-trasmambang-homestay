@@ -229,6 +229,41 @@ html[data-theme='light'] {
   }
 }
 
+/* Widget calendar popover animation */
+@keyframes calendar-popover-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes calendar-popover-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+    filter: blur(4px);
+  }
+}
+
+.calendar-popover[data-state='open'] {
+  animation: calendar-popover-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.calendar-popover[data-state='closed'] {
+  animation: calendar-popover-out 0.15s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
 /* Calendar: override default DayPicker accent colors */
 .rdp-root {
   --rdp-accent-color: #122023;

@@ -178,7 +178,7 @@ export default function AvailabilityWidget({
         </PopoverAnchor>
 
         <PopoverContent
-          className="w-[calc(100vw-32px)] md:w-auto p-2 rounded-3xl border-none shadow-[0_12px_48px_rgba(0,0,0,0.15)] overflow-hidden"
+          className="calendar-popover w-[calc(100vw-32px)] md:w-auto p-2 rounded-3xl border-none shadow-[0_12px_48px_rgba(0,0,0,0.15)] overflow-hidden"
           align="center"
           sideOffset={16}
         >
