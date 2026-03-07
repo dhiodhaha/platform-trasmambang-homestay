@@ -10,12 +10,16 @@ const TRANSITIONS: Record<string, string[]> = {
 }
 
 export const validateStatusTransition: CollectionBeforeChangeHook = async ({
+  req,
   data,
   operation,
   originalDoc,
   context,
 }) => {
   if (operation !== 'update' || !data?.bookingStatus || !originalDoc) return data
+
+  // Allow admins to bypass strict status transition rules
+  if (context?.skipBookingHooks || req.user) return data
 
   if (context?.skipBookingHooks) return data
 

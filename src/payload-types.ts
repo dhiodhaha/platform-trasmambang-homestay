@@ -202,6 +202,10 @@ export interface Page {
                   relationTo: 'posts';
                   value: number | Post;
                 } | null);
+            /**
+             * Enter the section ID without the # (e.g., "location" or "booking-form")
+             */
+            sectionId?: string | null;
             url?: string | null;
             label: string;
             /**
@@ -497,6 +501,10 @@ export interface CallToActionBlock {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
           /**
@@ -547,6 +555,10 @@ export interface ContentBlock {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
           /**
@@ -1185,6 +1197,7 @@ export interface PagesSelect<T extends boolean = true> {
                     type?: T;
                     newTab?: T;
                     reference?: T;
+                    sectionId?: T;
                     url?: T;
                     label?: T;
                     appearance?: T;
@@ -1231,6 +1244,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
               appearance?: T;
@@ -1257,6 +1271,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
               appearance?: T;
@@ -1835,6 +1850,10 @@ export interface Header {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
         };
@@ -1868,6 +1887,10 @@ export interface Footer {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
         };
@@ -2042,6 +2065,7 @@ export interface HeaderSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
             };
@@ -2066,6 +2090,7 @@ export interface FooterSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
             };

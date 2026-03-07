@@ -90,7 +90,7 @@ export function BookingForm({
   const formatLocalDate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-  const finalPrice = Math.floor((totalPrice - discountAmount) / 1000) * 1000
+  const finalPrice = totalPrice - discountAmount
 
   const onSubmit = async (formData: BookingFormData) => {
     setIsSubmitting(true)

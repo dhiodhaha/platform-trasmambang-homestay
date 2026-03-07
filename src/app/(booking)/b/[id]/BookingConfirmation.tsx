@@ -82,7 +82,7 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
     <button
       type="button"
       onClick={handleCopy}
-      className="group inline-flex items-center gap-1.5 rounded bg-[#F7F6F2] hover:bg-[#EBE5D9] px-2 py-1 transition-colors active:scale-95"
+      className="group inline-flex items-center gap-1.5 rounded bg-white border border-[#EBE5D9] hover:bg-[#F7F6F2] hover:border-[#D4CFC4] px-2.5 py-1.5 transition-all shadow-sm active:scale-95"
       title="Salin ke clipboard"
     >
       {copied ? (
@@ -97,7 +97,7 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
         </svg>
       ) : (
         <svg
-          className="w-3.5 h-3.5 text-[#6B6B6B] group-hover:text-[#122023] transition-colors"
+          className="w-3.5 h-3.5 text-[#122023]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -108,7 +108,7 @@ function CopyButton({ text, label = 'Salin' }: { text: string; label?: string })
         </svg>
       )}
       <span
-        className={`text-[10px] font-bold tracking-[0.1em] uppercase ${copied ? 'text-[#276749]' : 'text-[#6B6B6B] group-hover:text-[#122023]'} transition-colors`}
+        className={`text-[10px] font-bold tracking-[0.1em] uppercase ${copied ? 'text-[#276749]' : 'text-[#122023]'} transition-colors`}
       >
         {copied ? 'Tersalin' : label}
       </span>
@@ -144,6 +144,8 @@ function useCountdown(deadline: Date) {
 export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours }: Props) {
   const router = useRouter()
   const [isCancelling, setIsCancelling] = useState(false)
+  const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false)
+  const [localPaymentStatus, setLocalPaymentStatus] = useState(booking.paymentStatus)
 
   const deadline = new Date(new Date(booking.createdAt).getTime() + expiryHours * 60 * 60 * 1000)
   const countdown = useCountdown(deadline)
@@ -153,23 +155,57 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
   )
 
   const displayAmount = booking.transferAmount ?? booking.finalPrice
-
   const domain = typeof window !== 'undefined' ? window.location.origin : ''
   const paymentUrl = `${domain}/b/${booking.slugId}`
 
   const waMessage = encodeURIComponent(
     [
-      `Halo, saya sudah transfer untuk pemesanan Trasmambang.`,
-      `Booking ID: *${booking.bookingCode}*`,
-      `Nama: ${booking.guestName}`,
-      `Jumlah bayar: ${formatRupiah(displayAmount)}`,
-      `Link pesanan: ${paymentUrl}`,
+      `Halo Admin Trasmambang 👋`,
+      ``,
+      `Saya ingin mengonfirmasi pembayaran untuk pesanan saya:`,
+      ``,
+      `*ID Booking:* ${booking.bookingCode}`,
+      `*Nama:* ${booking.guestName}`,
+      `*Jumlah:* ${formatRupiah(displayAmount)}`,
+      `*Link Pesanan:* ${paymentUrl}`,
+      ``,
+      `Berikut saya lampirkan bukti transfernya. Terima kasih!`,
     ].join('\n'),
   )
-  const waLink = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${waMessage}` : ''
+
+  // Ensure WhatsApp number starts with 62 instead of 0
+  const cleanWAMobileNumber = whatsappNumber
+    ? whatsappNumber.replace(/^0/, '62').replace(/\D/g, '')
+    : ''
+  const waLink = cleanWAMobileNumber ? `https://wa.me/${cleanWAMobileNumber}?text=${waMessage}` : ''
 
   const isPending = booking.bookingStatus === 'pending'
+  const isTransferSent = localPaymentStatus === 'transfer_sent'
   const status = STATUS_CONFIG[booking.bookingStatus] || STATUS_CONFIG.pending
+
+  const handleTransferSent = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (isSubmittingTransfer) return
+    setIsSubmittingTransfer(true)
+
+    try {
+      // 1. Tell backend to mark as transfer_sent (stops the timer)
+      await fetch('/api/bookings/transfer-sent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slugId: booking.slugId }),
+      })
+
+      // 2. Update local state to hide timer and show Success Verification UI
+      setLocalPaymentStatus('transfer_sent')
+      clearPendingBookingCookie()
+    } catch (error) {
+      console.error('Failed to update transfer status', error)
+      alert('Maaf, ada kendala jaringan. Silakan coba klik tombol lagi dalam beberapa detik.')
+    } finally {
+      setIsSubmittingTransfer(false)
+    }
+  }
 
   const handleCancel = async () => {
     if (!confirm('Anda yakin ingin membatalkan pesanan ini? Aksi ini tidak dapat diubah.')) return
@@ -203,150 +239,227 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
         <div className="w-full lg:flex-1 order-1 flex flex-col gap-8 sm:gap-10 mt-2 lg:mt-6">
           {/* Hero Header */}
           <div>
-            <div className="inline-flex items-center gap-2 mb-5">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8C4A0] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#D8A77B]"></span>
-              </span>
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#8C6D4A]">
-                Menunggu Pembayaran
-              </span>
-            </div>
+            {!isTransferSent && (
+              <div className="inline-flex items-center gap-2 mb-5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8C4A0] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#D8A77B]"></span>
+                </span>
+                <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#8C6D4A]">
+                  Menunggu Pembayaran
+                </span>
+              </div>
+            )}
             <h1
               className="text-4xl sm:text-5xl font-medium tracking-tight text-[#122023] leading-[1.1]"
               style={{ fontFamily: 'var(--font-geist-sans)' }}
             >
-              Selesaikan
-              <br />
-              Pembayaran
+              {isTransferSent ? (
+                <>
+                  Terima Kasih,
+                  <br />
+                  Telah Membayar
+                </>
+              ) : (
+                <>
+                  Selesaikan
+                  <br />
+                  Pembayaran
+                </>
+              )}
             </h1>
             <p className="mt-5 text-[#6B6B6B] text-[15px] leading-relaxed max-w-[360px]">
-              Pesanan Anda telah kami simpan. Harap selesaikan pembayaran sebelum waktu habis.
+              {isTransferSent
+                ? 'Pesanan Anda aman. Kami akan memproses verifikasi secepatnya setelah menerima bukti transfer dari Anda.'
+                : 'Pesanan Anda telah kami simpan. Harap selesaikan pembayaran sebelum waktu habis.'}
             </p>
           </div>
 
-          {/* Countdown & Deadline Grid */}
-          <div className="grid grid-cols-2 gap-4 border-y border-[#122023]/10 py-6">
-            <div>
-              <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
-                Sisa Waktu
-              </p>
-              <p
-                className="text-3xl sm:text-4xl tabular-nums font-medium text-[#122023]"
-                style={{ fontFamily: 'var(--font-geist-mono)' }}
-              >
-                {countdown}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
-                Batas Akhir
-              </p>
-              <p className="text-[15px] sm:text-base font-medium text-[#122023]">
-                {deadline.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
-              </p>
-              <p className="text-sm text-[#9B9B9B] mt-0.5">
-                {deadline.toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </p>
-            </div>
-          </div>
-
-          {/* Transfer Info */}
-          <div className="relative bg-white border border-[#EBE5D9] p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-            {/* Top accent bar */}
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-[#122023]"></div>
-
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+          {/* Countdown & Deadline Grid (Hidden if transfer sent) */}
+          {!isTransferSent ? (
+            <div className="grid grid-cols-2 gap-4 border-y border-[#122023]/10 py-6">
               <div>
                 <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
-                  Jumlah Transfer
+                  Sisa Waktu
                 </p>
                 <p
-                  className="text-3xl sm:text-[2.5rem] leading-none font-medium text-[#122023] tracking-tight"
-                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  className="text-3xl sm:text-4xl tabular-nums font-medium text-[#122023]"
+                  style={{ fontFamily: 'var(--font-geist-mono)' }}
                 >
-                  {formatRupiah(displayAmount)}
+                  {countdown}
                 </p>
               </div>
-              <div className="shrink-0 mt-1 sm:mt-0">
-                <CopyButton text={String(displayAmount)} />
-              </div>
-            </div>
-
-            {booking.transferCode && (
-              <div className="mb-8 p-4 bg-[#FFF9F0] border border-[#E8C4A0]/30 flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#E8C4A0] mt-1.5 shrink-0" />
-                <p className="text-[13px] text-[#8C6D4A] leading-relaxed">
-                  Harap transfer <strong>tepat</strong> hingga 3 digit terakhir (
-                  <strong className="font-mono bg-white/50 px-1 py-0.5 rounded text-[#122023]">
-                    {booking.transferCode}
-                  </strong>
-                  ) untuk mempercepat verifikasi.
-                </p>
-              </div>
-            )}
-
-            {/* Bank Details */}
-            <div className="space-y-6 pt-1">
-              <div className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-dashed border-[#EBE5D9] pb-6">
-                <div>
-                  <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-2">
-                    {' '}
-                    Rekening {bank.name}
-                  </p>
-                  <p
-                    className="text-[20px] sm:text-xl font-medium tracking-widest text-[#122023]"
-                    style={{ fontFamily: 'var(--font-geist-mono)' }}
-                  >
-                    {bank.accountNumber}
-                  </p>
-                </div>
-                <div className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                  <CopyButton text={bank.accountNumber} />
-                </div>
-              </div>
-
               <div>
                 <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
-                  Atas Nama
+                  Batas Akhir
                 </p>
-                <p className="text-[15px] font-medium text-[#122023]">{bank.accountName}</p>
+                <p className="text-[15px] sm:text-base font-medium text-[#122023]">
+                  {deadline.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                </p>
+                <p className="text-sm text-[#9B9B9B] mt-0.5">
+                  {deadline.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </p>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-[#F0FFF4] border border-[#48BB78]/30 p-6 sm:p-8 flex flex-col items-center justify-center text-center rounded-lg shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-[#48BB78]/10 flex items-center justify-center mb-5">
+                <svg
+                  className="w-8 h-8 text-[#276749]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-[14px] font-bold tracking-[0.15em] uppercase text-[#276749] mb-3">
+                Menunggu Verifikasi Admin
+              </p>
+              <p className="text-[15px] text-[#2F4F4F] max-w-[320px] mb-6 leading-relaxed">
+                Harap kirimkan <strong className="font-semibold">Bukti Transfer / Struk</strong>{' '}
+                Anda ke WhatsApp Admin kami untuk mempercepat proses konfirmasi kamar.
+              </p>
+
+              {waLink && (
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full relative overflow-hidden bg-[#25D366] text-white flex items-center justify-center gap-3 py-4 px-6 rounded shadow-md transition-all duration-300 hover:bg-[#128C7E] active:scale-[0.98]"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                  <span className="text-[13px] font-bold tracking-[0.1em] uppercase z-10 pt-0.5">
+                    Kirim Bukti Transfer via WA
+                  </span>
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Transfer Info */}
+          {!isTransferSent && (
+            <div className="relative bg-white border border-[#EBE5D9] p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+              {/* Top accent bar */}
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-[#122023]"></div>
+
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
+                    Jumlah Transfer
+                  </p>
+                  <p
+                    className="text-3xl sm:text-[2.5rem] leading-none font-medium text-[#122023] tracking-tight"
+                    style={{ fontFamily: 'var(--font-geist-sans)' }}
+                  >
+                    {formatRupiah(displayAmount)}
+                  </p>
+                </div>
+                <div className="shrink-0 mt-1 sm:mt-0">
+                  <CopyButton text={String(displayAmount)} />
+                </div>
+              </div>
+
+              {booking.transferCode && !isTransferSent && (
+                <div className="mb-8 p-4 bg-[#FFF9F0] border border-[#E8C4A0]/30 flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#E8C4A0] mt-1.5 shrink-0" />
+                  <p className="text-[13px] text-[#8C6D4A] leading-relaxed">
+                    Harap transfer <strong>tepat</strong> hingga 3 digit terakhir (
+                    <strong className="font-mono bg-white/50 px-1 py-0.5 rounded text-[#122023]">
+                      {booking.transferCode}
+                    </strong>
+                    ) untuk mempercepat verifikasi. Sisa digit adalah potongan untuk Anda!
+                  </p>
+                </div>
+              )}
+
+              {/* Bank Details */}
+              <div className="space-y-6 pt-1">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-dashed border-[#EBE5D9] pb-6">
+                  <div>
+                    <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-2">
+                      {' '}
+                      Rekening {bank.name}
+                    </p>
+                    <p
+                      className="text-[20px] sm:text-xl font-medium tracking-widest text-[#122023]"
+                      style={{ fontFamily: 'var(--font-geist-mono)' }}
+                    >
+                      {bank.accountNumber}
+                    </p>
+                  </div>
+                  <div className="shrink-0 mt-1 sm:mt-0">
+                    <CopyButton text={bank.accountNumber} />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
+                    Atas Nama
+                  </p>
+                  <p className="text-[15px] font-medium text-[#122023]">{bank.accountName}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col items-center gap-5 mt-2">
-            {waLink && (
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={clearPendingBookingCookie}
-                className="w-full group relative overflow-hidden bg-[#122023] text-white flex items-center justify-center gap-3 py-5 px-6 transition-all duration-300 hover:bg-black active:scale-[0.98]"
+            {!isTransferSent && (
+              <button
+                onClick={handleTransferSent}
+                disabled={isSubmittingTransfer}
+                className="w-full group relative overflow-hidden bg-[#122023] text-white flex items-center justify-center gap-3 py-5 px-6 transition-all duration-300 hover:bg-black active:scale-[0.98] disabled:opacity-80"
               >
                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                <svg className="w-[18px] h-[18px] z-10 fill-current" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
+                {isSubmittingTransfer ? (
+                  <svg
+                    className="animate-spin w-[18px] h-[18px] z-10 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      className="opacity-25"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      className="opacity-75"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="w-[18px] h-[18px] z-10 fill-current" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                )}
                 <span className="text-[12px] sm:text-[13px] font-bold tracking-[0.15em] uppercase z-10 pt-px">
-                  Saya Sudah Transfer
+                  {isSubmittingTransfer ? 'Memproses...' : 'Saya Sudah Transfer'}
                 </span>
-              </a>
+              </button>
             )}
 
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={isCancelling}
-              className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#9B9B9B] hover:text-[#C53030] transition-colors py-2 px-4 disabled:opacity-50 inline-block"
-            >
-              {isCancelling ? 'Membatalkan...' : 'Batalkan Pesanan Ini'}
-            </button>
+            {!isTransferSent && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isCancelling}
+                className="text-[10px] font-bold tracking-[0.1em] uppercase text-[#9B9B9B] hover:text-[#C53030] transition-colors py-2 px-4 disabled:opacity-50 inline-block"
+              >
+                {isCancelling ? 'Membatalkan...' : 'Batalkan Pesanan Ini'}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -400,7 +513,9 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
               </h2>
               <div className="flex items-center justify-center gap-3">
                 <p className="text-2xl font-medium tracking-tight">{booking.bookingCode}</p>
-                <CopyButton text={booking.bookingCode} label="" />
+                <div className="shrink-0 mt-1">
+                  <CopyButton text={booking.bookingCode} label="" />
+                </div>
               </div>
               <p className="text-xs text-[#9B9B9B] mt-2 font-mono">
                 {new Date(booking.createdAt).toLocaleString('id-ID', {
@@ -470,11 +585,14 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
                 </div>
               )}
 
-              {booking.transferCode && isPending && (
-                <div className="flex justify-between text-[#6B6B6B]">
-                  <span className="text-xs">Kode Unik Transfer</span>
+              {booking.transferCode !== undefined && isPending && (
+                <div className="flex justify-between text-[#276749]">
+                  <span className="text-xs">Keringanan Kode Unik</span>
                   <span className="text-xs" style={{ fontFamily: 'var(--font-geist-mono)' }}>
-                    +{formatRupiah(booking.transferCode)}
+                    -
+                    {formatRupiah(
+                      booking.finalPrice - (booking.transferAmount || booking.finalPrice),
+                    )}
                   </span>
                 </div>
               )}

@@ -38,14 +38,20 @@ export const calculatePricing: CollectionBeforeValidateHook = async ({ data, ope
     data.discountAmount = 0
   }
 
-  // Round finalPrice down to nearest 1000 before adding transfer code
-  // This ensures the last 3 digits of transferAmount are accurately reflected by the code
-  data.finalPrice = Math.floor((data.totalPrice - (data.discountAmount || 0)) / 1000) * 1000
+  // Round finalPrice down to nearest 1000 before applying the deduction
+  // This ensures a clean base price.
+  data.finalPrice = data.totalPrice - (data.discountAmount || 0)
 
-  // Generate unique 3-digit transfer code for payment verification
-  const transferCode = Math.floor(Math.random() * 900) + 100 // 100-999
-  data.transferCode = transferCode
-  data.transferAmount = data.finalPrice + transferCode
+  // Generate a random subtraction amount between 1 and 500
+  const deduction = Math.floor(Math.random() * 500) + 1
+
+  // Ensure we don't drop below 0
+  data.transferAmount = Math.max(0, data.finalPrice - deduction)
+
+  // The transferCode is what the user actually needs to pay attention to
+  // at the end of the newly calculated transferAmount.
+  // e.g. 5930790 -> code is 790
+  data.transferCode = data.transferAmount % 1000
 
   return data
 }
