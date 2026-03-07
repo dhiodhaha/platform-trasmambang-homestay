@@ -1,9 +1,20 @@
 import type { GlobalConfig } from 'payload'
+import { revalidateTag } from 'next/cache'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site Settings',
   access: { read: () => true },
+  hooks: {
+    afterChange: [
+      ({ doc, req: { context } }) => {
+        if (!context.disableRevalidate) {
+          revalidateTag('global_site-settings')
+        }
+        return doc
+      },
+    ],
+  },
   fields: [
     {
       type: 'collapsible',

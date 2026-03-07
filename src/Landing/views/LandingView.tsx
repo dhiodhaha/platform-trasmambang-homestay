@@ -1,6 +1,5 @@
 import React from 'react'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import Hero from '@/Landing/components/hero'
 import Intro from '@/Landing/components/intro'
 import Rooms from '@/Landing/components/rooms'
@@ -15,8 +14,7 @@ import FAQ from '@/Landing/components/faq'
 import CTA from '@/Landing/components/cta'
 
 export async function LandingView() {
-  const payload = await getPayload({ config })
-  const settings = await payload.findGlobal({ slug: 'site-settings' })
+  const settings = await getCachedGlobal('site-settings', 1)()
 
   const isAutomatedBookingEnabled = settings.isAutomatedBookingEnabled !== false
   const whatsappNumber = settings.whatsappNumber as string
