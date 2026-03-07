@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { DayPicker, getDefaultClassNames, type DateRange } from 'react-day-picker'
 import 'react-day-picker/style.css'
 
@@ -8,16 +8,17 @@ type Props = {
   unavailableDates: Array<{ start: string; end: string }>
   minAdvanceDays: number
   onSelect: (range: DateRange | undefined) => void
-  initialRange?: DateRange
+  selected?: DateRange
+  onDisabledClick?: (date: Date) => void
 }
 
 export function AvailabilityCalendar({
   unavailableDates,
   minAdvanceDays,
   onSelect,
-  initialRange,
+  selected: range,
+  onDisabledClick,
 }: Props) {
-  const [range, setRange] = useState<DateRange | undefined>(initialRange)
   const defaultClassNames = getDefaultClassNames()
 
   const disabledDays: Array<{ from: Date; to: Date } | { before: Date }> = [
@@ -46,11 +47,9 @@ export function AvailabilityCalendar({
     // If both dates selected, check if range spans across a disabled date
     if (newRange?.from && newRange?.to && rangeContainsDisabledDate(newRange.from, newRange.to)) {
       // Reset to just the new "to" date as a new start
-      setRange({ from: newRange.to, to: undefined })
       onSelect({ from: newRange.to, to: undefined })
       return
     }
-    setRange(newRange)
     onSelect(newRange)
   }
 
@@ -60,6 +59,11 @@ export function AvailabilityCalendar({
         mode="range"
         selected={range}
         onSelect={handleSelect}
+        onDayClick={(day, modifiers) => {
+          if (modifiers.disabled && onDisabledClick) {
+            onDisabledClick(day)
+          }
+        }}
         disabled={disabledDays}
         numberOfMonths={2}
         showOutsideDays

@@ -270,7 +270,7 @@ export function BookingForm({
         <AvailabilityCalendar
           unavailableDates={unavailableDates}
           minAdvanceDays={minAdvanceDays}
-          initialRange={
+          selected={
             initialCheckIn && initialCheckOut
               ? {
                   from: new Date(`${initialCheckIn}T00:00:00`),
