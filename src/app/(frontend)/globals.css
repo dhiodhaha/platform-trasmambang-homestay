@@ -240,6 +240,11 @@ html[data-theme='light'] {
   --rdp-selected-border: none;
 }
 
+/* Force chevron to be black */
+.rdp-root .rdp-chevron {
+  fill: #000000 !important;
+}
+
 /* Remove default DayPicker selected background on all days */
 .rdp-selected .rdp-day_button {
   background: transparent !important;

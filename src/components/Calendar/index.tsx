@@ -23,17 +23,42 @@ export function AvailabilityCalendar({
 }: Props) {
   const defaultClassNames = getDefaultClassNames()
 
-  const disabledDays: Array<{ from: Date; to: Date } | { before: Date }> = [
-    // Past dates + minimum advance days
-    {
-      before: new Date(Date.now() + minAdvanceDays * 24 * 60 * 60 * 1000),
-    },
-    // Unavailable date ranges
-    ...unavailableDates.map((d) => ({
-      from: new Date(d.start),
-      to: new Date(new Date(d.end).getTime() - 24 * 60 * 60 * 1000), // end is exclusive (checkout day)
-    })),
-  ]
+  const disabledDays: Array<{ from: Date; to: Date } | { before: Date } | { after: Date } | Date> =
+    [
+      // Past dates + minimum advance days
+      {
+        before: new Date(Date.now() + minAdvanceDays * 24 * 60 * 60 * 1000),
+      },
+      // Unavailable date ranges
+      ...unavailableDates.map((d) => ({
+        from: new Date(d.start),
+        to: new Date(new Date(d.end).getTime() - 24 * 60 * 60 * 1000), // end is exclusive (checkout day)
+      })),
+    ]
+
+  // Airbnb behavior: When picking checkout, disable dates before check-in and dates after the first unavailable date
+  if (activePopover === 'checkOut' && range?.from) {
+    // Disable dates before check-in
+    disabledDays.push({ before: range.from })
+
+    // Find the first blocked date AFTER the check-in date
+    let firstBlockedAfterCheckIn: Date | null = null
+    const checkInTime = range.from.getTime()
+
+    for (const d of unavailableDates) {
+      const blockedStart = new Date(`${d.start}T00:00:00`)
+      if (blockedStart.getTime() > checkInTime) {
+        if (!firstBlockedAfterCheckIn || blockedStart < firstBlockedAfterCheckIn) {
+          firstBlockedAfterCheckIn = blockedStart
+        }
+      }
+    }
+
+    // Disable dates after the first blocked date
+    if (firstBlockedAfterCheckIn) {
+      disabledDays.push({ after: firstBlockedAfterCheckIn })
+    }
+  }
 
   const rangeContainsDisabledDate = (from: Date, to: Date): boolean => {
     for (const d of unavailableDates) {
