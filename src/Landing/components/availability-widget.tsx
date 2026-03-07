@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { type DateRange } from 'react-day-picker'
 import Link from 'next/link'
 import { AvailabilityCalendar } from '@/components/Calendar'
+import { MessageCircle } from 'lucide-react'
 
 type UnavailableRange = { start: string; end: string }
 
@@ -13,7 +14,15 @@ function getPendingBookingId(): string | null {
   return match ? match[1] : null
 }
 
-export default function AvailabilityWidget() {
+type AvailabilityWidgetProps = {
+  isAutomatedBookingEnabled?: boolean
+  whatsappNumber: string
+}
+
+export default function AvailabilityWidget({
+  isAutomatedBookingEnabled = true,
+  whatsappNumber,
+}: AvailabilityWidgetProps) {
   const [unavailableDates, setUnavailableDates] = useState<UnavailableRange[]>([])
   const [range, setRange] = useState<DateRange | undefined>()
   const [loading, setLoading] = useState(true)
@@ -60,6 +69,33 @@ export default function AvailabilityWidget() {
     )
   }
 
+  if (!isAutomatedBookingEnabled) {
+    return (
+      <div className="space-y-6 text-center py-6">
+        <div>
+          <h3
+            className="mb-3 text-2xl font-normal tracking-[-0.02em] text-white"
+            style={{ fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Pemesanan Otomatis Ditutup
+          </h3>
+          <p className="text-sm text-white/70 px-4">
+            Mohon maaf, sistem pemesanan via website sedang kami tutup sementara.
+          </p>
+        </div>
+        <a
+          href={`https://wa.me/${whatsappNumber}?text=Halo%2C%20saya%20ingin%20cek%20ketersediaan%20kamar%20di%20Trasmambang%20Homestay.`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full rounded-full bg-[#128C7E] px-8 py-4 text-center text-sm font-medium uppercase tracking-wide text-white transition-colors hover:bg-[#075E54]"
+        >
+          <MessageCircle className="w-5 h-5" />
+          Hubungi via WhatsApp
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -92,13 +128,30 @@ export default function AvailabilityWidget() {
       {range?.from && range?.to && (
         <div className="text-sm text-white/70 space-y-1">
           <p>
-            Check-in: <span className="font-medium text-white">{range.from.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            Check-in:{' '}
+            <span className="font-medium text-white">
+              {range.from.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
           </p>
           <p>
-            Check-out: <span className="font-medium text-white">{range.to.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            Check-out:{' '}
+            <span className="font-medium text-white">
+              {range.to.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
           </p>
           <p className="text-white/50">
-            untuk {Math.ceil((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24))} malam
+            untuk {Math.ceil((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24))}{' '}
+            malam
           </p>
         </div>
       )}

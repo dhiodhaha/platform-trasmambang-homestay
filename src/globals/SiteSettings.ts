@@ -7,6 +7,28 @@ export const SiteSettings: GlobalConfig = {
   fields: [
     {
       type: 'collapsible',
+      label: 'System Toggles',
+      fields: [
+        {
+          name: 'isAutomatedBookingEnabled',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description: 'Matikan untuk menggunakan WhatsApp manual (saat maintenance/full)',
+          },
+        },
+        {
+          name: 'isWhatsAppFloatingButtonEnabled',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description: 'Tampilkan tombol WhatsApp melayang di sudut kanan bawah setiap halaman',
+          },
+        },
+      ],
+    },
+    {
+      type: 'collapsible',
       label: 'Pricing',
       fields: [
         {
@@ -75,7 +97,12 @@ export const SiteSettings: GlobalConfig = {
         {
           name: 'whatsappNumber',
           type: 'text',
-          admin: { description: 'Nomor WA owner (format: 6285xxx)' },
+          required: true,
+          defaultValue: '6285117082122',
+          admin: {
+            description:
+              'Nomor WA owner (format: 6285xxx). Digunakan untuk fallback booking dan tombol melayang.',
+          },
         },
       ],
     },

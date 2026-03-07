@@ -10,15 +10,23 @@ import { Footer } from '@/Footer/Component'
 import { Header } from '@/Header/Component'
 import { PromoPopup } from '@/PromoPopup/Component'
 import { PendingBookingBanner } from '@/components/PendingBookingBanner'
+import { FloatingWhatsApp } from '@/components/FloatingWhatsApp'
 import { Providers } from '@/providers'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { draftMode } from 'next/headers'
 
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
+import { getPayload } from 'payload'
+import configPromise from '@payload-config'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
+
+  const payload = await getPayload({ config: configPromise })
+  const settings = await payload.findGlobal({ slug: 'site-settings' })
+  const isFloatingEnabled = settings.isWhatsAppFloatingButtonEnabled !== false
+  const whatsappNumber = settings.whatsappNumber as string
 
   return (
     <html
@@ -44,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Footer />
           <PromoPopup />
           <PendingBookingBanner />
+          {isFloatingEnabled && <FloatingWhatsApp whatsappNumber={whatsappNumber} />}
         </Providers>
       </body>
     </html>

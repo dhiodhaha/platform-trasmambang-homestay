@@ -2014,6 +2014,14 @@ export interface LinkTree {
 export interface SiteSetting {
   id: number;
   /**
+   * Matikan untuk menggunakan WhatsApp manual (saat maintenance/full)
+   */
+  isAutomatedBookingEnabled?: boolean | null;
+  /**
+   * Tampilkan tombol WhatsApp melayang di sudut kanan bawah setiap halaman
+   */
+  isWhatsAppFloatingButtonEnabled?: boolean | null;
+  /**
    * Harga per malam (Rupiah)
    */
   pricePerNight: number;
@@ -2041,9 +2049,9 @@ export interface SiteSetting {
   bankAccountNumber?: string | null;
   bankAccountName?: string | null;
   /**
-   * Nomor WA owner (format: 6285xxx)
+   * Nomor WA owner (format: 6285xxx). Digunakan untuk fallback booking dan tombol melayang.
    */
-  whatsappNumber?: string | null;
+  whatsappNumber: string;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2163,6 +2171,8 @@ export interface LinkTreeSelect<T extends boolean = true> {
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
+  isAutomatedBookingEnabled?: T;
+  isWhatsAppFloatingButtonEnabled?: T;
   pricePerNight?: T;
   standardCapacity?: T;
   maxCapacity?: T;

@@ -9,7 +9,12 @@ import AvailabilityWidget from './availability-widget'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-export default function CTA() {
+type CTAProps = {
+  isAutomatedBookingEnabled?: boolean
+  whatsappNumber: string
+}
+
+export default function CTA({ isAutomatedBookingEnabled = true, whatsappNumber }: CTAProps) {
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   useGSAP(
@@ -58,7 +63,7 @@ export default function CTA() {
                 Pesan Sekarang
               </Link>
               <Link
-                href="https://wa.me/6285117082122?text=Halo%2C%20saya%20dari%20website%20trasmambang.com%0A%0ASaya%20mau%20tanya%20detail%20lainnya"
+                href={`https://wa.me/${whatsappNumber}?text=Halo%2C%20saya%20dari%20website%20trasmambang.com%0A%0ASaya%20mau%20tanya%20detail%20lainnya`}
                 target="_blank"
                 className="inline-block rounded-full border border-white text-white text-sm font-medium uppercase tracking-wide px-8 py-4 hover:bg-white/10 transition-colors"
               >
@@ -69,7 +74,10 @@ export default function CTA() {
 
           {/* Availability widget side (Second on mobile, first on desktop) */}
           <div className="order-2 lg:order-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8">
-            <AvailabilityWidget />
+            <AvailabilityWidget
+              isAutomatedBookingEnabled={isAutomatedBookingEnabled}
+              whatsappNumber={whatsappNumber}
+            />
           </div>
         </div>
       </div>
