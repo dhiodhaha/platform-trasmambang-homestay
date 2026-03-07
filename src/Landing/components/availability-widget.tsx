@@ -101,22 +101,13 @@ export default function AvailabilityWidget({
 
   const handleCalendarSelect = (newRange: DateRange | undefined) => {
     setErrorMessage(null)
+    setRange(newRange)
 
     if (activePopover === 'checkIn') {
-      // User picked a check-in date: store only `from`, auto-transition to check-out
-      setRange({ from: newRange?.from ?? newRange?.to, to: undefined })
       setActivePopover('checkOut')
-    } else {
-      // User is picking check-out
+    } else if (activePopover === 'checkOut') {
       if (newRange?.from && newRange?.to) {
-        setRange(newRange)
-        setActivePopover(null) // close on completion
-      } else {
-        // DayPicker reset the range (clicked before existing from) — treat as new check-in
-        setRange(newRange)
-        if (newRange?.from && !newRange?.to) {
-          setActivePopover('checkOut')
-        }
+        setActivePopover(null) // closed when checkOut holds both
       }
     }
   }
@@ -193,14 +184,37 @@ export default function AvailabilityWidget({
               unavailableDates={unavailableDates}
               minAdvanceDays={1}
               selected={range}
+              activePopover={activePopover}
               onSelect={handleCalendarSelect}
               onDisabledClick={() => setErrorMessage('Tanggal sudah ada yang booking')}
             />
             {errorMessage && (
-              <div className="absolute bottom-4 left-0 right-0 text-center text-sm font-medium text-red-500 max-w-[300px] mx-auto bg-red-50/90 py-1.5 px-3 rounded-full backdrop-blur-sm border border-red-100 animate-in fade-in slide-in-from-bottom-2">
+              <div className="absolute bottom-16 left-0 right-0 text-center text-sm font-medium text-red-500 max-w-[300px] mx-auto bg-red-50/90 py-1.5 px-3 rounded-full backdrop-blur-sm border border-red-100 animate-in fade-in slide-in-from-bottom-2">
                 {errorMessage}
               </div>
             )}
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-between px-4 pt-2 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRange(undefined)
+                  setErrorMessage(null)
+                  setActivePopover('checkIn')
+                }}
+                className="text-sm font-medium underline text-gray-800 hover:text-black hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
+              >
+                Bersihkan tanggal
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePopover(null)}
+                className="text-sm font-bold bg-[#122023] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </PopoverContent>
       </Popover>
@@ -211,7 +225,7 @@ export default function AvailabilityWidget({
       >
         <span className="text-sm font-bold tracking-wide flex items-center gap-2">
           <Search className="w-4 h-4" />
-          {range?.from && range?.to ? 'Cari' : 'Cari'}
+          {range?.from && range?.to ? 'Pesan' : 'Pesan'}
         </span>
       </Link>
     </div>

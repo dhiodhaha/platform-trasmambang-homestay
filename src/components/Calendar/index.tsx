@@ -10,6 +10,7 @@ type Props = {
   onSelect: (range: DateRange | undefined) => void
   selected?: DateRange
   onDisabledClick?: (date: Date) => void
+  activePopover?: 'checkIn' | 'checkOut' | null
 }
 
 export function AvailabilityCalendar({
@@ -18,6 +19,7 @@ export function AvailabilityCalendar({
   onSelect,
   selected: range,
   onDisabledClick,
+  activePopover,
 }: Props) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -43,14 +45,35 @@ export function AvailabilityCalendar({
     return false
   }
 
-  const handleSelect = (newRange: DateRange | undefined) => {
-    // If both dates selected, check if range spans across a disabled date
-    if (newRange?.from && newRange?.to && rangeContainsDisabledDate(newRange.from, newRange.to)) {
-      // Reset to just the new "to" date as a new start
-      onSelect({ from: newRange.to, to: undefined })
+  const handleDayClick = (day: Date, modifiers: any) => {
+    if (modifiers.disabled) {
+      if (onDisabledClick) onDisabledClick(day)
       return
     }
-    onSelect(newRange)
+
+    if (activePopover === 'checkIn') {
+      // User is picking Check-in
+      // Always reset check-out when picking a new check-in date
+      onSelect({ from: day, to: undefined })
+    } else if (activePopover === 'checkOut') {
+      // User is picking Check-out
+      if (!range?.from) {
+        onSelect({ from: day, to: undefined })
+      } else if (day <= range.from) {
+        // Picked a date before from -> reset check-in
+        onSelect({ from: day, to: undefined })
+      } else {
+        // Valid checkout
+        if (rangeContainsDisabledDate(range.from, day)) {
+          if (onDisabledClick) onDisabledClick(day)
+        } else {
+          onSelect({ from: range.from, to: day })
+        }
+      }
+    } else {
+      // Fallback
+      onSelect({ from: day, to: undefined })
+    }
   }
 
   return (
@@ -58,19 +81,14 @@ export function AvailabilityCalendar({
       <DayPicker
         mode="range"
         selected={range}
-        onSelect={handleSelect}
-        onDayClick={(day, modifiers) => {
-          if (modifiers.disabled && onDisabledClick) {
-            onDisabledClick(day)
-          }
-        }}
+        onDayClick={handleDayClick}
         disabled={disabledDays}
         numberOfMonths={2}
         // className="rounded-2xl border border-black/5 bg-[#FAFAFA] p-4 sm:p-6 sm:px-8 w-fit mx-auto"
         classNames={{
           today: `font-bold text-[#D8A77B] bg-black`, // Slightly darker brand color for today
           selected: `bg-[#E8C4A0] text-[#122023] font-semibold `, // Highlight the selected day
-          chevron: `${defaultClassNames.chevron} fill-[#122023]`, // Change the color of the chevron
+          chevron: `${defaultClassNames.chevron} fill-black`, // Change the color of the chevron
           range_start: `bg-[#E8C4A0] text-[#122023] rounded-l-full`,
           range_end: `bg-[#E8C4A0] text-[#122023] rounded-r-full`,
           range_middle: `bg-[#E8C4A0]/50 text-[#122023] rounded-none`,

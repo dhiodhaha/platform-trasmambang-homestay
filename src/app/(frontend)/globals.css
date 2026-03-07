@@ -228,3 +228,63 @@ html[data-theme='light'] {
     --rdp-cell-size: 11vw; /* Responsive cells on very small mobile */
   }
 }
+
+/* Calendar: override default DayPicker accent colors */
+.rdp-root {
+  --rdp-accent-color: #122023;
+  --rdp-accent-background-color: transparent;
+  --rdp-range_start-color: transparent;
+  --rdp-range_end-color: transparent;
+  --rdp-range_middle-color: transparent;
+  --rdp-range_middle-background-color: transparent;
+  --rdp-selected-border: none;
+}
+
+/* Remove default DayPicker selected background on all days */
+.rdp-selected .rdp-day_button {
+  background: transparent !important;
+  color: inherit;
+  border: none;
+}
+
+/* Dark circle only on start / end / single selected */
+.rdp-range-cap .rdp-day_button,
+.rdp-selected:not(.rdp-range-mid):not(.rdp-range-start-cap):not(.rdp-range-end-cap)
+  .rdp-day_button {
+  background: #122023 !important;
+  color: #fff !important;
+  border-radius: 9999px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+/* Gray pill behind start circle (right half) */
+.rdp-range-start-cap {
+  background: linear-gradient(to right, transparent 50%, #e8e8e8 50%) !important;
+  border-radius: 0;
+}
+
+/* Gray pill behind end circle (left half) */
+.rdp-range-end-cap {
+  background: linear-gradient(to left, transparent 50%, #e8e8e8 50%) !important;
+  border-radius: 0;
+}
+
+/* Same day start+end: no gray */
+.rdp-range-start-cap.rdp-range-end-cap {
+  background: transparent !important;
+}
+
+/* Middle days: flat gray, no circle */
+.rdp-range-mid {
+  background: #e8e8e8 !important;
+  border-radius: 0;
+}
+
+.rdp-range-mid .rdp-day_button {
+  background: transparent !important;
+  color: #122023 !important;
+  font-weight: 500;
+  border-radius: 0;
+}
