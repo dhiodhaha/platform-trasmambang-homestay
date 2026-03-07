@@ -66,7 +66,6 @@ export function AvailabilityCalendar({
         }}
         disabled={disabledDays}
         numberOfMonths={2}
-        showOutsideDays
         // className="rounded-2xl border border-black/5 bg-[#FAFAFA] p-4 sm:p-6 sm:px-8 w-fit mx-auto"
         classNames={{
           today: `font-bold text-[#D8A77B] bg-black`, // Slightly darker brand color for today
