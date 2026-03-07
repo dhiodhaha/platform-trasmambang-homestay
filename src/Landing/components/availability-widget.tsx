@@ -103,7 +103,10 @@ export default function AvailabilityWidget({
     setErrorMessage(null)
     setRange(newRange)
 
-    if (activePopover === 'checkIn') {
+    if (!newRange) {
+      // Selection cleared — reset to checkIn
+      setActivePopover('checkIn')
+    } else if (activePopover === 'checkIn') {
       setActivePopover('checkOut')
     } else if (activePopover === 'checkOut') {
       if (newRange?.from && newRange?.to) {
@@ -195,7 +198,7 @@ export default function AvailabilityWidget({
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center justify-between px-4 pt-2 pb-2">
+            <div className="flex items-center justify-end gap-2 px-4 pt-2 pb-2">
               <button
                 type="button"
                 onClick={() => {

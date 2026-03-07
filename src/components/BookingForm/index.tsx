@@ -40,8 +40,21 @@ export function BookingForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [calendarRange, setCalendarRange] = useState<
+    { from: Date; to?: Date } | undefined
+  >(
+    initialCheckIn
+      ? {
+          from: new Date(`${initialCheckIn}T00:00:00`),
+          to: initialCheckOut ? new Date(`${initialCheckOut}T00:00:00`) : undefined,
+        }
+      : undefined,
+  )
   const [couponDiscount, setCouponDiscount] = useState<CouponDiscount | null>(null)
   const [showReview, setShowReview] = useState(false)
+  const [activePopover, setActivePopover] = useState<'checkIn' | 'checkOut'>(
+    initialCheckIn && !initialCheckOut ? 'checkOut' : 'checkIn',
+  )
 
   const {
     register,
@@ -270,15 +283,11 @@ export function BookingForm({
         <AvailabilityCalendar
           unavailableDates={unavailableDates}
           minAdvanceDays={minAdvanceDays}
-          selected={
-            initialCheckIn && initialCheckOut
-              ? {
-                  from: new Date(`${initialCheckIn}T00:00:00`),
-                  to: new Date(`${initialCheckOut}T00:00:00`),
-                }
-              : undefined
-          }
+          activePopover={activePopover}
+          selected={calendarRange}
           onSelect={(range) => {
+            setCalendarRange(range as typeof calendarRange)
+
             if (range?.from) {
               setValue('checkIn', formatLocalDate(range.from), {
                 shouldValidate: true,
@@ -293,11 +302,33 @@ export function BookingForm({
                 shouldValidate: true,
                 shouldDirty: true,
               })
+              // Stay on checkOut (calendar always visible)
             } else {
               setValue('checkOut', '', { shouldValidate: true })
             }
+
+            // Reset to checkIn if selection was cleared, otherwise switch to checkOut
+            if (!range) {
+              setActivePopover('checkIn')
+            } else if (activePopover === 'checkIn' && range?.from) {
+              setActivePopover('checkOut')
+            }
           }}
         />
+        {calendarRange?.from && (
+          <button
+            type="button"
+            onClick={() => {
+              setCalendarRange(undefined)
+              setValue('checkIn', '', { shouldValidate: true })
+              setValue('checkOut', '', { shouldValidate: true })
+              setActivePopover('checkIn')
+            }}
+            className="mt-2 text-sm font-medium underline text-gray-600 hover:text-black transition-colors"
+          >
+            Bersihkan tanggal
+          </button>
+        )}
         {errors.checkIn && (
           <p className="mt-2 text-sm text-red-500 font-medium">{errors.checkIn.message}</p>
         )}

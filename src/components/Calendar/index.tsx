@@ -37,7 +37,8 @@ export function AvailabilityCalendar({
     ]
 
   // Airbnb behavior: When picking checkout, disable dates before check-in and dates after the first unavailable date
-  if (activePopover === 'checkOut' && range?.from) {
+  // Only apply when checkout is not yet selected (still picking), not when range is complete (re-selection mode)
+  if (activePopover === 'checkOut' && range?.from && !range?.to) {
     // Disable dates before check-in
     disabledDays.push({ before: range.from })
 
@@ -46,7 +47,7 @@ export function AvailabilityCalendar({
     const checkInTime = range.from.getTime()
 
     for (const d of unavailableDates) {
-      const blockedStart = new Date(`${d.start}T00:00:00`)
+      const blockedStart = new Date(d.start)
       if (blockedStart.getTime() > checkInTime) {
         if (!firstBlockedAfterCheckIn || blockedStart < firstBlockedAfterCheckIn) {
           firstBlockedAfterCheckIn = blockedStart
@@ -62,8 +63,8 @@ export function AvailabilityCalendar({
 
   const rangeContainsDisabledDate = (from: Date, to: Date): boolean => {
     for (const d of unavailableDates) {
-      const blockedStart = new Date(`${d.start}T00:00:00`)
-      const blockedEnd = new Date(`${d.end}T00:00:00`)
+      const blockedStart = new Date(d.start)
+      const blockedEnd = new Date(d.end)
       // Overlap check: blocked range [blockedStart, blockedEnd) overlaps [from, to]
       if (blockedStart < to && blockedEnd > from) return true
     }
@@ -78,13 +79,24 @@ export function AvailabilityCalendar({
 
     if (activePopover === 'checkIn') {
       // User is picking Check-in
-      // Always reset check-out when picking a new check-in date
-      onSelect({ from: day, to: undefined })
+      if (range?.from && day.getTime() === range.from.getTime() && !range?.to) {
+        // Clicked the same check-in date again — clear selection
+        onSelect(undefined)
+      } else {
+        // Always reset check-out when picking a new check-in date
+        onSelect({ from: day, to: undefined })
+      }
     } else if (activePopover === 'checkOut') {
       // User is picking Check-out
       if (!range?.from) {
         onSelect({ from: day, to: undefined })
-      } else if (day <= range.from) {
+      } else if (range?.to) {
+        // Complete range exists — reset (Airbnb behavior)
+        onSelect({ from: day, to: undefined })
+      } else if (day.getTime() === range.from.getTime()) {
+        // Clicked the same check-in date again — clear selection
+        onSelect(undefined)
+      } else if (day < range.from) {
         // Picked a date before from -> reset check-in
         onSelect({ from: day, to: undefined })
       } else {
