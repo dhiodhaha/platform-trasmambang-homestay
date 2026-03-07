@@ -1,11 +1,15 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { type DateRange } from 'react-day-picker'
 import Link from 'next/link'
 import { AvailabilityCalendar } from '@/components/Calendar'
 import { MessageCircle, Search } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover'
+import { Drawer } from 'vaul'
+import { VisuallyHidden } from '@/components/ui/visually-hidden'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 type UnavailableRange = { start: string; end: string }
 
@@ -30,6 +34,8 @@ export default function AvailabilityWidget({
   const [pendingBookingId, setPendingBookingId] = useState<string | null>(null)
   const [activePopover, setActivePopover] = useState<'checkIn' | 'checkOut' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const isMobile = useMediaQuery('(max-width: 767px)')
 
   useEffect(() => {
     setPendingBookingId(getPendingBookingId())
@@ -42,6 +48,9 @@ export default function AvailabilityWidget({
 
   const formatLocalDateForUrl = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+  const formatDateShort = (d: Date) =>
+    d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 
   const bookingUrl =
     range?.from && range?.to
@@ -104,17 +113,169 @@ export default function AvailabilityWidget({
     setRange(newRange)
 
     if (!newRange) {
-      // Selection cleared — reset to checkIn
       setActivePopover('checkIn')
     } else if (activePopover === 'checkIn') {
       setActivePopover('checkOut')
     } else if (activePopover === 'checkOut') {
       if (newRange?.from && newRange?.to) {
-        setActivePopover(null) // closed when checkOut holds both
+        if (isMobile) {
+          setDrawerOpen(false)
+        }
+        setActivePopover(null)
       }
     }
   }
 
+  // --- Mobile layout ---
+  if (isMobile) {
+    const hasBothDates = range?.from && range?.to
+
+    return createPortal(
+      <>
+        {/* Sticky bottom bar */}
+        <div className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">
+              Rp 1.699.000
+              <span className="font-normal text-gray-500"> / malam</span>
+            </p>
+            {hasBothDates ? (
+              <p className="text-xs text-gray-500 truncate">
+                {formatDateShort(range.from!)} – {formatDateShort(range.to!)}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400">Pilih tanggal</p>
+            )}
+          </div>
+
+          {hasBothDates ? (
+            <Link
+              href={bookingUrl}
+              className="shrink-0 flex items-center justify-center bg-[#E8C4A0] hover:bg-[#ddb78f] text-[#122023] rounded-xl px-6 py-3 text-sm font-bold tracking-wide transition-colors"
+            >
+              Pesan
+            </Link>
+          ) : (
+            <button
+              onClick={() => {
+                setActivePopover('checkIn')
+                setDrawerOpen(true)
+              }}
+              className="shrink-0 flex items-center justify-center bg-[#122023] text-white rounded-xl px-5 py-3 text-sm font-bold tracking-wide transition-colors hover:bg-black"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Cek Ketersediaan
+            </button>
+          )}
+        </div>
+
+        {/* Vaul Drawer */}
+        <Drawer.Root
+          open={drawerOpen}
+          onOpenChange={setDrawerOpen}
+          snapPoints={[0.9]}
+        >
+          <Drawer.Portal>
+            <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50" />
+            <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl flex flex-col max-h-[90vh]">
+              <Drawer.Title asChild>
+                <VisuallyHidden>Pilih tanggal menginap</VisuallyHidden>
+              </Drawer.Title>
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 rounded-full bg-gray-300" />
+              </div>
+
+              {/* Sticky header: Check-in / Check-out toggle */}
+              <div className="px-4 pb-3 border-b border-gray-100">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActivePopover('checkIn')}
+                    className={`flex-1 flex flex-col items-center py-3 rounded-xl transition-all text-center ${
+                      activePopover === 'checkIn'
+                        ? 'bg-[#122023] text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold tracking-wider uppercase opacity-70">
+                      Check-in
+                    </span>
+                    <span className="text-sm font-medium mt-0.5">
+                      {range?.from ? formatDateShort(range.from) : 'Tambah Tanggal'}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!range?.from) {
+                        setActivePopover('checkIn')
+                      } else {
+                        setActivePopover('checkOut')
+                      }
+                    }}
+                    className={`flex-1 flex flex-col items-center py-3 rounded-xl transition-all text-center ${
+                      activePopover === 'checkOut'
+                        ? 'bg-[#122023] text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold tracking-wider uppercase opacity-70">
+                      Check-out
+                    </span>
+                    <span className="text-sm font-medium mt-0.5">
+                      {range?.to ? formatDateShort(range.to) : 'Tambah Tanggal'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable calendar body */}
+              <div className="flex-1 overflow-y-auto px-2 py-4">
+                <AvailabilityCalendar
+                  unavailableDates={unavailableDates}
+                  minAdvanceDays={1}
+                  selected={range}
+                  activePopover={activePopover}
+                  onSelect={handleCalendarSelect}
+                  onDisabledClick={() => setErrorMessage('Tanggal sudah ada yang booking')}
+                  numberOfMonths={6}
+                />
+                {errorMessage && (
+                  <div className="text-center text-sm font-medium text-red-500 max-w-[300px] mx-auto bg-red-50/90 py-1.5 px-3 rounded-full border border-red-100 mt-2">
+                    {errorMessage}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRange(undefined)
+                    setErrorMessage(null)
+                    setActivePopover('checkIn')
+                  }}
+                  className="text-sm font-medium underline text-gray-800 hover:text-black px-3 py-2 rounded-lg transition-colors"
+                >
+                  Bersihkan tanggal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  className="text-sm font-bold bg-[#122023] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors"
+                >
+                  Tutup
+                </button>
+              </div>
+            </Drawer.Content>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </>,
+      document.body,
+    )
+  }
+
+  // --- Desktop layout (unchanged) ---
   return (
     <div className="flex flex-col md:flex-row items-center bg-white rounded-3xl md:rounded-full p-2 w-full max-w-3xl mx-auto shadow-xl border border-gray-200 relative z-20">
       <Popover
@@ -139,13 +300,10 @@ export default function AvailabilityWidget({
               <span
                 className={`text-sm truncate mt-0.5 ${range?.from ? 'text-gray-900 font-medium' : 'text-gray-400 font-light'}`}
               >
-                {range?.from
-                  ? range.from.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                  : 'Tambah Tanggal'}
+                {range?.from ? formatDateShort(range.from) : 'Tambah Tanggal'}
               </span>
             </button>
 
-            {/* Separator - only show if neither is strictly active in a way that overlaps it */}
             <div className="hidden md:block w-[1px] h-10 bg-gray-200 self-center absolute left-1/2 -translate-x-1/2 z-0" />
             <div className="block md:hidden h-[1px] w-[calc(100%-32px)] bg-gray-200 self-center my-1" />
 
@@ -169,9 +327,7 @@ export default function AvailabilityWidget({
               <span
                 className={`text-sm truncate mt-0.5 ${range?.to ? 'text-gray-900 font-medium' : 'text-gray-400 font-light'}`}
               >
-                {range?.to
-                  ? range.to.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                  : 'Tambah Tanggal'}
+                {range?.to ? formatDateShort(range.to) : 'Tambah Tanggal'}
               </span>
             </button>
           </div>
@@ -197,7 +353,6 @@ export default function AvailabilityWidget({
               </div>
             )}
 
-            {/* Action buttons */}
             <div className="flex items-center justify-end gap-2 px-4 pt-2 pb-2">
               <button
                 type="button"

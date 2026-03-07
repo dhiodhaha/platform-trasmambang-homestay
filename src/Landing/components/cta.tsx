@@ -39,7 +39,7 @@ export default function CTA({ isAutomatedBookingEnabled = true, whatsappNumber }
   )
 
   return (
-    <section className="relative w-full min-h-[80vh] flex items-center justify-center overflow-hidden py-24 px-4 bg-[#122023]">
+    <section className="relative w-full min-h-[80vh] flex items-center justify-center overflow-hidden py-24 pb-32 md:pb-24 px-4 bg-[#122023]">
       <Image
         src="/media/ruang-tamu-atas.webp"
         alt="Trasmambang Homestay Interior"

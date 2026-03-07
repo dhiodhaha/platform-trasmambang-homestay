@@ -11,6 +11,7 @@ type Props = {
   selected?: DateRange
   onDisabledClick?: (date: Date) => void
   activePopover?: 'checkIn' | 'checkOut' | null
+  numberOfMonths?: number
 }
 
 export function AvailabilityCalendar({
@@ -20,6 +21,7 @@ export function AvailabilityCalendar({
   selected: range,
   onDisabledClick,
   activePopover,
+  numberOfMonths = 2,
 }: Props) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -120,7 +122,7 @@ export function AvailabilityCalendar({
         selected={range}
         onDayClick={handleDayClick}
         disabled={disabledDays}
-        numberOfMonths={2}
+        numberOfMonths={numberOfMonths}
         // className="rounded-2xl border border-black/5 bg-[#FAFAFA] p-4 sm:p-6 sm:px-8 w-fit mx-auto"
         classNames={{
           today: `font-bold text-[#D8A77B] bg-black`, // Slightly darker brand color for today
