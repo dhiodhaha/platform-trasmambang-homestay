@@ -73,7 +73,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({ data }) => {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             {navItems.map(({ link }, i) => {
-              const slug = typeof link?.reference?.value === 'object' ? link?.reference?.value?.slug : null
+              const slug =
+                typeof link?.reference?.value === 'object' ? link?.reference?.value?.slug : null
               const href =
                 link?.type === 'reference' && slug
                   ? `${link?.reference?.relationTo !== 'pages' ? `/${link?.reference?.relationTo}` : ''}/${slug === 'home' ? '' : slug}${link?.sectionId ? `#${link.sectionId}` : ''}`
@@ -90,6 +91,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({ data }) => {
               )
             })}
           </nav>
+
+          {/* Cek Pesanan */}
+          <Link
+            href="/cek-pesanan"
+            className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-700 hover:text-gray-900 transition-colors"
+          >
+            Cek Pesanan
+          </Link>
 
           {/* CTA Button */}
           <Link
@@ -119,7 +128,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({ data }) => {
         <div className="fixed inset-0 z-40 bg-white pt-24 px-6 md:hidden">
           <nav className="flex flex-col gap-6">
             {navItems.map(({ link }, i) => {
-              const slug = typeof link?.reference?.value === 'object' ? link?.reference?.value?.slug : null
+              const slug =
+                typeof link?.reference?.value === 'object' ? link?.reference?.value?.slug : null
               const href =
                 link?.type === 'reference' && slug
                   ? `${link?.reference?.relationTo !== 'pages' ? `/${link?.reference?.relationTo}` : ''}/${slug === 'home' ? '' : slug}${link?.sectionId ? `#${link.sectionId}` : ''}`
@@ -136,6 +146,13 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({ data }) => {
                 </Link>
               )
             })}
+            <Link
+              href="/cek-pesanan"
+              className="text-sm font-semibold uppercase tracking-wider text-gray-700 hover:text-gray-900 transition-colors border-b border-gray-100 pb-4"
+              onClick={() => setMobileOpen(false)}
+            >
+              Cek Pesanan
+            </Link>
             <Link
               href={ctaUrl}
               target="_blank"

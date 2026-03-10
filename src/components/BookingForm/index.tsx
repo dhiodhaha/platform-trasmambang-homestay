@@ -40,9 +40,7 @@ export function BookingForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [calendarRange, setCalendarRange] = useState<
-    { from: Date; to?: Date } | undefined
-  >(
+  const [calendarRange, setCalendarRange] = useState<{ from: Date; to?: Date } | undefined>(
     initialCheckIn
       ? {
           from: new Date(`${initialCheckIn}T00:00:00`),
@@ -52,6 +50,7 @@ export function BookingForm({
   )
   const [couponDiscount, setCouponDiscount] = useState<CouponDiscount | null>(null)
   const [showReview, setShowReview] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [activePopover, setActivePopover] = useState<'checkIn' | 'checkOut'>(
     initialCheckIn && !initialCheckOut ? 'checkOut' : 'checkIn',
   )
@@ -246,6 +245,27 @@ export function BookingForm({
           </div>
         )}
 
+        <div className="flex items-center gap-3 px-2 mb-2">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="w-5 h-5 rounded border-gray-300 text-[#E8C4A0] focus:ring-[#E8C4A0] accent-[#E8C4A0] cursor-pointer"
+          />
+          <label htmlFor="terms" className="text-sm text-[#122023] cursor-pointer">
+            Saya setuju dengan{' '}
+            <a
+              href="/syarat-dan-ketentuan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#E8C4A0] hover:underline font-medium"
+            >
+              Syarat & Ketentuan
+            </a>
+          </label>
+        </div>
+
         <div className="flex gap-3">
           <button
             type="button"
@@ -257,7 +277,7 @@ export function BookingForm({
           <button
             type="button"
             onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !agreedToTerms}
             className="flex-1 rounded-full bg-[#E8C4A0] px-8 py-5 text-center text-sm font-semibold uppercase tracking-widest text-[#122023] transition-colors hover:bg-[#ddb78f] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
           >
             {isSubmitting ? 'Memproses...' : 'Konfirmasi & Booking'}

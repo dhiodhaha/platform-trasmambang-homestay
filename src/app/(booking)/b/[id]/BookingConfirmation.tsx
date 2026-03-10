@@ -146,6 +146,11 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
   const [isCancelling, setIsCancelling] = useState(false)
   const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false)
   const [localPaymentStatus, setLocalPaymentStatus] = useState(booking.paymentStatus)
+  const [domain, setDomain] = useState('')
+
+  useEffect(() => {
+    setDomain(window.location.origin)
+  }, [])
 
   const deadline = new Date(new Date(booking.createdAt).getTime() + expiryHours * 60 * 60 * 1000)
   const countdown = useCountdown(deadline)
@@ -155,7 +160,6 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
   )
 
   const displayAmount = booking.transferAmount ?? booking.finalPrice
-  const domain = typeof window !== 'undefined' ? window.location.origin : ''
   const paymentUrl = `${domain}/b/${booking.slugId}`
 
   const waMessage = encodeURIComponent(
@@ -293,10 +297,13 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
                 <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#6B6B6B] mb-1.5">
                   Batas Akhir
                 </p>
-                <p className="text-[15px] sm:text-base font-medium text-[#122023]">
+                <p
+                  suppressHydrationWarning
+                  className="text-[15px] sm:text-base font-medium text-[#122023]"
+                >
                   {deadline.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
                 </p>
-                <p className="text-sm text-[#9B9B9B] mt-0.5">
+                <p suppressHydrationWarning className="text-sm text-[#9B9B9B] mt-0.5">
                   {deadline.toLocaleDateString('id-ID', {
                     day: 'numeric',
                     month: 'short',
@@ -323,7 +330,7 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
               </p>
               <p className="text-[15px] text-[#2F4F4F] max-w-[320px] mb-6 leading-relaxed">
                 Harap kirimkan <strong className="font-semibold">Bukti Transfer / Struk</strong>{' '}
-                Anda ke WhatsApp Admin kami untuk mempercepat proses konfirmasi kamar.
+                Anda ke WhatsApp Admin kami untuk mempercepat proses konfirmasi pemesanan homestay.
               </p>
 
               {waLink && (
@@ -517,7 +524,7 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
                   <CopyButton text={booking.bookingCode} label="" />
                 </div>
               </div>
-              <p className="text-xs text-[#9B9B9B] mt-2 font-mono">
+              <p suppressHydrationWarning className="text-xs text-[#9B9B9B] mt-2 font-mono">
                 {new Date(booking.createdAt).toLocaleString('id-ID', {
                   year: 'numeric',
                   month: '2-digit',
@@ -546,7 +553,7 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
                 <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#9B9B9B] mb-1">
                   Check-in
                 </p>
-                <p className="text-[14px] font-medium leading-snug">
+                <p suppressHydrationWarning className="text-[14px] font-medium leading-snug">
                   {formatDate(booking.checkIn)}
                 </p>
                 <p className="text-[11px] text-[#6B6B6B] mt-0.5">Mulai 14:00</p>
@@ -555,7 +562,7 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
                 <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#9B9B9B] mb-1">
                   Check-out
                 </p>
-                <p className="text-[14px] font-medium leading-snug">
+                <p suppressHydrationWarning className="text-[14px] font-medium leading-snug">
                   {formatDate(booking.checkOut)}
                 </p>
                 <p className="text-[11px] text-[#6B6B6B] mt-0.5">Sblm 12:00</p>
