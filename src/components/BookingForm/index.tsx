@@ -280,6 +280,14 @@ export function BookingForm({
           </span>
           Pilih Tanggal
         </h2>
+        {/* Dynamic instruction */}
+        <p className="text-sm text-[#6B6B6B] mb-3">
+          {activePopover === 'checkIn'
+            ? calendarRange?.from && calendarRange?.to
+              ? 'Klik tanggal mana saja untuk memilih ulang'
+              : 'Pilih tanggal check-in'
+            : 'Pilih tanggal check-out'}
+        </p>
         <AvailabilityCalendar
           unavailableDates={unavailableDates}
           minAdvanceDays={minAdvanceDays}
@@ -302,16 +310,20 @@ export function BookingForm({
                 shouldValidate: true,
                 shouldDirty: true,
               })
-              // Stay on checkOut (calendar always visible)
             } else {
               setValue('checkOut', '', { shouldValidate: true })
             }
 
-            // Reset to checkIn if selection was cleared, otherwise switch to checkOut
+            // Airbnb state flow:
+            // Cleared → checkIn mode
+            // Only check-in set (new selection or auto-reset) → checkOut mode
+            // Both dates set → checkIn mode (ready for third-click reset)
             if (!range) {
               setActivePopover('checkIn')
-            } else if (activePopover === 'checkIn' && range?.from) {
+            } else if (!range.to) {
               setActivePopover('checkOut')
+            } else {
+              setActivePopover('checkIn')
             }
           }}
         />

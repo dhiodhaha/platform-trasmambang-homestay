@@ -113,14 +113,15 @@ export default function AvailabilityWidget({
     setRange(newRange)
 
     if (!newRange) {
+      // Cleared — back to check-in
       setActivePopover('checkIn')
-    } else if (activePopover === 'checkIn') {
+    } else if (!newRange.to) {
+      // Only check-in set (new selection or auto-reset) — advance to check-out
       setActivePopover('checkOut')
-    } else if (activePopover === 'checkOut') {
-      if (newRange?.from && newRange?.to) {
-        if (isMobile) {
-          setDrawerOpen(false)
-        }
+    } else {
+      // Both dates set — keep calendar open for review / third-click reset
+      // On desktop, close popover; on mobile, stay in drawer (user closes manually)
+      if (!isMobile) {
         setActivePopover(null)
       }
     }
@@ -256,10 +257,13 @@ export default function AvailabilityWidget({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDrawerOpen(false)}
-                  className="text-sm font-bold bg-[#122023] text-white px-5 py-2.5 rounded-lg hover:bg-black transition-colors"
+                  onClick={() => {
+                    setDrawerOpen(false)
+                    setActivePopover(null)
+                  }}
+                  className="text-sm font-bold bg-[#122023] text-white px-6 py-2.5 rounded-lg hover:bg-black transition-colors"
                 >
-                  Tutup
+                  {range?.from && range?.to ? 'Simpan' : 'Tutup'}
                 </button>
               </div>
             </Drawer.Content>

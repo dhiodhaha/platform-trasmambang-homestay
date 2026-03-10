@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { DayPicker, getDefaultClassNames, type DateRange } from 'react-day-picker'
 import 'react-day-picker/style.css'
 
@@ -24,6 +24,11 @@ export function AvailabilityCalendar({
   numberOfMonths = 2,
 }: Props) {
   const defaultClassNames = getDefaultClassNames()
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+
+  // Determine if we should show hover preview: check-in is set, no check-out yet, and a date is hovered
+  const isAwaitingCheckout = activePopover === 'checkOut' && range?.from && !range?.to
+  const hoverPreviewEnd = isAwaitingCheckout && hoveredDate && hoveredDate > range.from ? hoveredDate : null
 
   const disabledDays: Array<{ from: Date; to: Date } | { before: Date } | { after: Date } | Date> =
     [
@@ -115,22 +120,42 @@ export function AvailabilityCalendar({
     }
   }
 
+  // Build hover preview modifiers
+  const hoverModifiers: Record<string, (date: Date) => boolean> = {}
+  if (hoverPreviewEnd && range?.from) {
+    const fromTime = range.from.getTime()
+    const hoverTime = hoverPreviewEnd.getTime()
+    hoverModifiers.hover_preview = (date: Date) => {
+      const t = date.getTime()
+      return t > fromTime && t < hoverTime
+    }
+    hoverModifiers.hover_end = (date: Date) => {
+      return date.getTime() === hoverTime
+    }
+  }
+
   return (
     <div className="flex justify-center w-full overflow-x-auto pb-4">
       <DayPicker
         mode="range"
         selected={range}
         onDayClick={handleDayClick}
+        onDayMouseEnter={(date) => setHoveredDate(date)}
+        onDayMouseLeave={() => setHoveredDate(null)}
         disabled={disabledDays}
         numberOfMonths={numberOfMonths}
-        // className="rounded-2xl border border-black/5 bg-[#FAFAFA] p-4 sm:p-6 sm:px-8 w-fit mx-auto"
+        modifiers={hoverModifiers}
+        modifiersClassNames={{
+          hover_preview: 'rdp-hover-preview',
+          hover_end: 'rdp-hover-end',
+        }}
         classNames={{
-          today: `font-bold text-[#D8A77B] bg-black`, // Slightly darker brand color for today
-          selected: `bg-[#E8C4A0] text-[#122023] font-semibold `, // Highlight the selected day
-          chevron: `${defaultClassNames.chevron} fill-black`, // Change the color of the chevron
-          range_start: `bg-[#E8C4A0] text-[#122023] rounded-l-full`,
-          range_end: `bg-[#E8C4A0] text-[#122023] rounded-r-full`,
-          range_middle: `bg-[#E8C4A0]/50 text-[#122023] rounded-none`,
+          today: `font-bold text-[#D8A77B]`,
+          selected: `font-semibold`,
+          chevron: `${defaultClassNames.chevron} fill-black`,
+          range_start: `rounded-l-full`,
+          range_end: `rounded-r-full`,
+          range_middle: `rounded-none`,
           day_button: `${defaultClassNames.day_button} transition-colors hover:bg-black/5 disabled:opacity-10 disabled:line-through disabled:hover:bg-transparent disabled:cursor-not-allowed`,
         }}
       />

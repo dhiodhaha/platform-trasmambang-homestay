@@ -358,3 +358,19 @@ html[data-theme='light'] {
   font-weight: 500;
   border-radius: 0;
 }
+
+/* Hover range preview: light gray between check-in and hovered date */
+.rdp-hover-preview {
+  background: #f0f0f0 !important;
+  border-radius: 0;
+}
+
+.rdp-hover-preview .rdp-day_button {
+  background: transparent !important;
+}
+
+/* Hovered end date: circle outline */
+.rdp-hover-end .rdp-day_button {
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 1.5px #122023;
+}
