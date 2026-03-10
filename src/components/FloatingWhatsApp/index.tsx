@@ -34,8 +34,8 @@ export function FloatingWhatsApp({ whatsappNumber }: FloatingWhatsAppProps) {
       href={`https://wa.me/${whatsappNumber}?text=Halo%2C%20saya%20dari%20website%20trasmambang.com%0A%0ASaya%20ingin%20tanya-tanya%20lebih%20lanjut.`}
       target="_blank"
       rel="noopener noreferrer"
-      className={`fixed right-4 sm:right-6 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-[#128C7E] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 hover:shadow-xl ${
-        hasPendingBooking ? 'bottom-[80px] sm:bottom-[90px]' : 'bottom-6 sm:bottom-8'
+      className={`fixed right-4 sm:right-6 z-[35] flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:bg-[#128C7E] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 hover:shadow-xl ${
+        hasPendingBooking ? 'bottom-[80px] sm:bottom-[90px]' : 'bottom-[76px] sm:bottom-8'
       }`}
       aria-label="Chat with us on WhatsApp"
     >

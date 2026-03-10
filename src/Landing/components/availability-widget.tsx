@@ -173,21 +173,16 @@ export default function AvailabilityWidget({
         <Drawer.Root
           open={drawerOpen}
           onOpenChange={setDrawerOpen}
-          snapPoints={[0.9]}
         >
           <Drawer.Portal>
             <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50" />
-            <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl flex flex-col max-h-[90vh]">
+            <Drawer.Content className="fixed inset-0 z-50 bg-white flex flex-col">
               <Drawer.Title asChild>
                 <VisuallyHidden>Pilih tanggal menginap</VisuallyHidden>
               </Drawer.Title>
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 rounded-full bg-gray-300" />
-              </div>
 
-              {/* Sticky header: Check-in / Check-out toggle */}
-              <div className="px-4 pb-3 border-b border-gray-100">
+              {/* Header: Check-in / Check-out toggle */}
+              <div className="px-4 pt-4 pb-3 border-b border-gray-100">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setActivePopover('checkIn')}
@@ -229,7 +224,7 @@ export default function AvailabilityWidget({
               </div>
 
               {/* Scrollable calendar body */}
-              <div className="flex-1 overflow-y-auto px-2 py-4">
+              <div className="flex-1 overflow-y-auto px-4 py-4">
                 <AvailabilityCalendar
                   unavailableDates={unavailableDates}
                   minAdvanceDays={1}
