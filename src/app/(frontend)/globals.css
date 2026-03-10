@@ -225,7 +225,11 @@ html[data-theme='light'] {
 
 @media (max-width: 767px) {
   .rdp-root {
-    --rdp-cell-size: 12.5vw; /* Full-width cells on mobile like Airbnb */
+    /* Square cells that fill the screen width (7 columns) */
+    --rdp-day-width: 12.5vw;
+    --rdp-day-height: 12.5vw;
+    --rdp-day_button-width: 11vw;
+    --rdp-day_button-height: 11vw;
     width: 100%;
   }
 
@@ -294,74 +298,88 @@ html[data-theme='light'] {
   animation: calendar-popover-out 0.15s cubic-bezier(0.4, 0, 1, 1) forwards !important;
 }
 
-/* Calendar: override default DayPicker accent colors */
+/* ===== Calendar: Airbnb-style capsule range ===== */
+
+/* Override DayPicker CSS variables for our theme */
 .rdp-root {
   --rdp-accent-color: #122023;
   --rdp-accent-background-color: transparent;
-  --rdp-range_start-color: transparent;
-  --rdp-range_end-color: transparent;
-  --rdp-range_middle-color: transparent;
-  --rdp-range_middle-background-color: transparent;
   --rdp-selected-border: none;
+  --rdp-today-color: #D8A77B;
+
+  /* Start cap: dark circle, right half gray gradient bridge */
+  --rdp-range_start-color: #fff;
+  --rdp-range_start-date-background-color: #122023;
+  --rdp-range_start-background: linear-gradient(
+    var(--rdp-gradient-direction),
+    transparent 50%,
+    #e8e8e8 50%
+  );
+
+  /* End cap: dark circle, left half gray gradient bridge */
+  --rdp-range_end-color: #fff;
+  --rdp-range_end-date-background-color: #122023;
+  --rdp-range_end-background: linear-gradient(
+    var(--rdp-gradient-direction),
+    #e8e8e8 50%,
+    transparent 50%
+  );
+
+  /* Middle: flat gray bridge */
+  --rdp-range_middle-background-color: #e8e8e8;
+  --rdp-range_middle-color: #122023;
 }
 
-/* Force chevron to be black */
+/* Chevron color */
 .rdp-root .rdp-chevron {
-  fill: #000000 !important;
+  fill: #000 !important;
 }
 
-/* Remove default DayPicker selected background on all days */
+/* Today: brand color, bold */
+.rdp-today:not(.rdp-outside) {
+  font-weight: 700;
+}
+
+/* Selected day (single, not in range): dark circle */
 .rdp-selected .rdp-day_button {
-  background: transparent !important;
-  color: inherit;
   border: none;
 }
 
-/* Dark circle only on start / end / single selected */
-.rdp-range-cap .rdp-day_button,
-.rdp-selected:not(.rdp-range-mid):not(.rdp-range-start-cap):not(.rdp-range-end-cap)
-  .rdp-day_button {
-  background: #122023 !important;
-  color: #fff !important;
-  border-radius: 9999px;
+/* Start/End circles: bold weight, ensure circle on top of bridge */
+.rdp-range_start .rdp-day_button,
+.rdp-range_end .rdp-day_button {
   font-weight: 600;
   position: relative;
   z-index: 1;
 }
 
-/* Gray pill behind start circle (right half) */
-.rdp-range-start-cap {
-  background: linear-gradient(to right, transparent 50%, #e8e8e8 50%) !important;
-  border-radius: 0;
-}
-
-/* Gray pill behind end circle (left half) */
-.rdp-range-end-cap {
-  background: linear-gradient(to left, transparent 50%, #e8e8e8 50%) !important;
-  border-radius: 0;
-}
-
-/* Same day start+end: no gray */
-.rdp-range-start-cap.rdp-range-end-cap {
-  background: transparent !important;
-}
-
-/* Middle days: flat gray, no circle */
-.rdp-range-mid {
-  background: #e8e8e8 !important;
-  border-radius: 0;
-}
-
-.rdp-range-mid .rdp-day_button {
-  background: transparent !important;
-  color: #122023 !important;
+/* Middle days: no circle, flat bridge */
+.rdp-range_middle .rdp-day_button {
   font-weight: 500;
-  border-radius: 0;
 }
 
-/* Hover range preview: light gray between check-in and hovered date */
+/* Disabled days: faint, strikethrough, no-click cursor */
+.rdp-disabled .rdp-day_button {
+  opacity: 0.15;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.rdp-disabled .rdp-day_button:hover {
+  background: transparent;
+}
+
+/* Non-selected day hover: subtle gray circle */
+.rdp-day:not(.rdp-selected):not(.rdp-disabled) .rdp-day_button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transition: background 0.1s ease;
+}
+
+/* ===== Hover range preview (ghost range) ===== */
+
+/* Light gray bridge between check-in and hovered date */
 .rdp-hover-preview {
-  background: #f0f0f0 !important;
+  background: #f0f0f0;
   border-radius: 0;
 }
 
@@ -369,8 +387,8 @@ html[data-theme='light'] {
   background: transparent !important;
 }
 
-/* Hovered end date: circle outline */
+/* Hovered end date: circle outline to show potential end-cap */
 .rdp-hover-end .rdp-day_button {
-  border-radius: 9999px;
+  border-radius: 100%;
   box-shadow: inset 0 0 0 1.5px #122023;
 }

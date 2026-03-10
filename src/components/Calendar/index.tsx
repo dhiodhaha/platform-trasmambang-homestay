@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { DayPicker, getDefaultClassNames, type DateRange } from 'react-day-picker'
+import { DayPicker, type DateRange } from 'react-day-picker'
 import 'react-day-picker/style.css'
 
 type Props = {
@@ -23,12 +23,11 @@ export function AvailabilityCalendar({
   activePopover,
   numberOfMonths = 2,
 }: Props) {
-  const defaultClassNames = getDefaultClassNames()
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
 
   // Determine if we should show hover preview: check-in is set, no check-out yet, and a date is hovered
   const isAwaitingCheckout = activePopover === 'checkOut' && range?.from && !range?.to
-  const hoverPreviewEnd = isAwaitingCheckout && hoveredDate && hoveredDate > range.from ? hoveredDate : null
+  const hoverPreviewEnd = isAwaitingCheckout && hoveredDate && range?.from && hoveredDate > range.from ? hoveredDate : null
 
   const disabledDays: Array<{ from: Date; to: Date } | { before: Date } | { after: Date } | Date> =
     [
@@ -148,15 +147,6 @@ export function AvailabilityCalendar({
         modifiersClassNames={{
           hover_preview: 'rdp-hover-preview',
           hover_end: 'rdp-hover-end',
-        }}
-        classNames={{
-          today: `font-bold text-[#D8A77B]`,
-          selected: `font-semibold`,
-          chevron: `${defaultClassNames.chevron} fill-black`,
-          range_start: `rounded-l-full`,
-          range_end: `rounded-r-full`,
-          range_middle: `rounded-none`,
-          day_button: `${defaultClassNames.day_button} transition-colors hover:bg-black/5 disabled:opacity-10 disabled:line-through disabled:hover:bg-transparent disabled:cursor-not-allowed`,
         }}
       />
     </div>
