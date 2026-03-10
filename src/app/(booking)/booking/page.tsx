@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { BookingForm } from '@/components/BookingForm'
+import { MessageCircle } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Booking - Trasmambang Homestay',
@@ -52,16 +53,37 @@ export default async function BookingPage({ searchParams: searchParamsPromise }:
           </p>
         </div>
 
-        <BookingForm
-          pricePerNight={settings.pricePerNight || 0}
-          standardCapacity={settings.standardCapacity || 8}
-          maxCapacity={settings.maxCapacity || 12}
-          minAdvanceDays={settings.minAdvanceDays || 1}
-          unavailableDates={unavailableDates}
-          initialCheckIn={searchParams.checkIn}
-          initialCheckOut={searchParams.checkOut}
-          bookingExpiryHours={settings.bookingExpiryHours || 24}
-        />
+        {settings.isAutomatedBookingEnabled !== false ? (
+          <BookingForm
+            pricePerNight={settings.pricePerNight || 0}
+            standardCapacity={settings.standardCapacity || 8}
+            maxCapacity={settings.maxCapacity || 12}
+            minAdvanceDays={settings.minAdvanceDays || 1}
+            unavailableDates={unavailableDates}
+            initialCheckIn={searchParams.checkIn}
+            initialCheckOut={searchParams.checkOut}
+            bookingExpiryHours={settings.bookingExpiryHours || 24}
+          />
+        ) : (
+          <div className="rounded-3xl border border-black/5 bg-white p-8 md:p-12 text-center shadow-sm">
+            <h2 className="text-2xl font-medium tracking-tight text-[#122023] mb-4">
+              Pemesanan Otomatis Sedang Ditutup
+            </h2>
+            <p className="text-[#6B6B6B] mb-8 max-w-md mx-auto">
+              Mohon maaf, sistem pemesanan otomatis sedang ditutup sementara (full-booked /
+              maintenance). Silakan hubungi kami via WhatsApp untuk mengecek ketersediaan manual.
+            </p>
+            <a
+              href={`https://wa.me/${settings.whatsappNumber}?text=Halo%2C%20saya%20ingin%20cek%20ketersediaan%20kamar%20di%20Trasmambang%20Homestay.`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#128C7E] px-8 py-4 text-sm font-medium tracking-wide text-white transition-colors hover:bg-[#075E54] hover:scale-105 active:scale-95 duration-200"
+            >
+              <MessageCircle className="w-5 h-5 drop-shadow-sm" />
+              Tanya Ketersediaan via WhatsApp
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )

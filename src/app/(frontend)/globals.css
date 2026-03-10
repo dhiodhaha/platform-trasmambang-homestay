@@ -223,8 +223,181 @@ html[data-theme='light'] {
   opacity: initial;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .rdp-root {
-    --rdp-cell-size: 11vw; /* Responsive cells on very small mobile */
+    /* Square cells that fill the screen width (7 columns) */
+    --rdp-day-width: 12.5vw;
+    --rdp-day-height: 12.5vw;
+    --rdp-day_button-width: 11vw;
+    --rdp-day_button-height: 11vw;
+    width: 100%;
   }
+
+  .rdp-root .rdp-months {
+    width: 100%;
+  }
+
+  .rdp-root .rdp-month {
+    width: 100%;
+  }
+
+  .rdp-root .rdp-month_grid {
+    width: 100%;
+  }
+
+  .rdp-root .rdp-weekdays,
+  .rdp-root .rdp-week {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+  }
+
+  .rdp-root .rdp-month_caption {
+    text-align: left;
+    padding-left: 0.25rem;
+  }
+
+  /* Hide nav arrows only in the mobile scrollable drawer (6-month list) */
+  .mobile-calendar-scroll .rdp-nav {
+    display: none;
+  }
+}
+
+/* Widget calendar popover animation */
+@keyframes calendar-popover-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes calendar-popover-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+    filter: blur(4px);
+  }
+}
+
+.calendar-popover[data-state='open'] {
+  animation: calendar-popover-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.calendar-popover[data-state='closed'] {
+  animation: calendar-popover-out 0.15s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+/* ===== Calendar: Airbnb-style capsule range ===== */
+/* These rules use !important to override react-day-picker's default CSS
+   regardless of stylesheet load order. */
+
+/* Today: brand amber, bold */
+.rdp-today:not(.rdp-outside) {
+  color: #D8A77B !important;
+  font-weight: 700 !important;
+}
+
+/* Chevron: always black */
+.rdp-root .rdp-chevron {
+  fill: #000 !important;
+}
+
+/* Remove default blue border on selected days */
+.rdp-selected .rdp-day_button {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* === Range start cap === */
+/* Right-half gray gradient (bridge) behind the dark start circle */
+.rdp-range_start:not(.rdp-range_end) {
+  background: linear-gradient(90deg, transparent 50%, #e8e8e8 50%) !important;
+}
+
+/* Dark circle on start button */
+.rdp-range_start .rdp-day_button {
+  background-color: #122023 !important;
+  color: #fff !important;
+  border-radius: 100% !important;
+  font-weight: 600 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* === Range end cap === */
+/* Left-half gray gradient (bridge) behind the dark end circle */
+.rdp-range_end:not(.rdp-range_start) {
+  background: linear-gradient(90deg, #e8e8e8 50%, transparent 50%) !important;
+}
+
+/* Dark circle on end button */
+.rdp-range_end .rdp-day_button {
+  background-color: #122023 !important;
+  color: #fff !important;
+  border-radius: 100% !important;
+  font-weight: 600 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* === Same-day start & end: just a circle, no gradient === */
+.rdp-range_start.rdp-range_end {
+  background: transparent !important;
+}
+
+/* === Middle days: flat gray bridge, no circle === */
+.rdp-range_middle {
+  background-color: #e8e8e8 !important;
+}
+
+.rdp-range_middle .rdp-day_button {
+  background: transparent !important;
+  color: #122023 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  font-weight: 500 !important;
+}
+
+/* Disabled days: faint, strikethrough, no-click */
+.rdp-disabled:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
+  opacity: 0.2 !important;
+  text-decoration: line-through !important;
+  cursor: not-allowed !important;
+}
+
+.rdp-disabled .rdp-day_button:hover {
+  background: transparent !important;
+}
+
+/* Non-selected, non-disabled day hover: subtle gray circle */
+.rdp-day:not(.rdp-selected):not(.rdp-disabled):not(.rdp-range_middle) .rdp-day_button:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+  transition: background 0.1s ease;
+}
+
+/* ===== Hover range preview (ghost range) ===== */
+
+.rdp-hover-preview {
+  background: #f0f0f0 !important;
+  border-radius: 0;
+}
+
+.rdp-hover-preview .rdp-day_button {
+  background: transparent !important;
+}
+
+.rdp-hover-end .rdp-day_button {
+  border-radius: 100% !important;
+  box-shadow: inset 0 0 0 1.5px #122023 !important;
 }

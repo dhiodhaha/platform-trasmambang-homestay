@@ -79,6 +79,15 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
       required: true,
     },
     {
+      name: 'sectionId',
+      type: 'text',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'reference',
+        description: 'Enter the section ID without the # (e.g., "location" or "booking-form")',
+      },
+      label: 'Section ID (Optional)',
+    },
+    {
       name: 'url',
       type: 'text',
       admin: {

@@ -40,8 +40,20 @@ export function BookingForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [calendarRange, setCalendarRange] = useState<{ from: Date; to?: Date } | undefined>(
+    initialCheckIn
+      ? {
+          from: new Date(`${initialCheckIn}T00:00:00`),
+          to: initialCheckOut ? new Date(`${initialCheckOut}T00:00:00`) : undefined,
+        }
+      : undefined,
+  )
   const [couponDiscount, setCouponDiscount] = useState<CouponDiscount | null>(null)
   const [showReview, setShowReview] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [activePopover, setActivePopover] = useState<'checkIn' | 'checkOut'>(
+    initialCheckIn && !initialCheckOut ? 'checkOut' : 'checkIn',
+  )
 
   const {
     register,
@@ -90,7 +102,7 @@ export function BookingForm({
   const formatLocalDate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-  const finalPrice = Math.floor((totalPrice - discountAmount) / 1000) * 1000
+  const finalPrice = totalPrice - discountAmount
 
   const onSubmit = async (formData: BookingFormData) => {
     setIsSubmitting(true)
@@ -233,6 +245,27 @@ export function BookingForm({
           </div>
         )}
 
+        <div className="flex items-center gap-3 px-2 mb-2">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="w-5 h-5 rounded border-gray-300 text-[#E8C4A0] focus:ring-[#E8C4A0] accent-[#E8C4A0] cursor-pointer"
+          />
+          <label htmlFor="terms" className="text-sm text-[#122023] cursor-pointer">
+            Saya setuju dengan{' '}
+            <a
+              href="/syarat-dan-ketentuan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#E8C4A0] hover:underline font-medium"
+            >
+              Syarat & Ketentuan
+            </a>
+          </label>
+        </div>
+
         <div className="flex gap-3">
           <button
             type="button"
@@ -244,7 +277,7 @@ export function BookingForm({
           <button
             type="button"
             onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !agreedToTerms}
             className="flex-1 rounded-full bg-[#E8C4A0] px-8 py-5 text-center text-sm font-semibold uppercase tracking-widest text-[#122023] transition-colors hover:bg-[#ddb78f] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
           >
             {isSubmitting ? 'Memproses...' : 'Konfirmasi & Booking'}
@@ -267,18 +300,22 @@ export function BookingForm({
           </span>
           Pilih Tanggal
         </h2>
+        {/* Dynamic instruction */}
+        <p className="text-sm text-[#6B6B6B] mb-3">
+          {activePopover === 'checkIn'
+            ? calendarRange?.from && calendarRange?.to
+              ? 'Klik tanggal mana saja untuk memilih ulang'
+              : 'Pilih tanggal check-in'
+            : 'Pilih tanggal check-out'}
+        </p>
         <AvailabilityCalendar
           unavailableDates={unavailableDates}
           minAdvanceDays={minAdvanceDays}
-          initialRange={
-            initialCheckIn && initialCheckOut
-              ? {
-                  from: new Date(`${initialCheckIn}T00:00:00`),
-                  to: new Date(`${initialCheckOut}T00:00:00`),
-                }
-              : undefined
-          }
+          activePopover={activePopover}
+          selected={calendarRange}
           onSelect={(range) => {
+            setCalendarRange(range as typeof calendarRange)
+
             if (range?.from) {
               setValue('checkIn', formatLocalDate(range.from), {
                 shouldValidate: true,
@@ -296,8 +333,34 @@ export function BookingForm({
             } else {
               setValue('checkOut', '', { shouldValidate: true })
             }
+
+            // Airbnb state flow:
+            // Cleared → checkIn mode
+            // Only check-in set (new selection or auto-reset) → checkOut mode
+            // Both dates set → checkIn mode (ready for third-click reset)
+            if (!range) {
+              setActivePopover('checkIn')
+            } else if (!range.to) {
+              setActivePopover('checkOut')
+            } else {
+              setActivePopover('checkIn')
+            }
           }}
         />
+        {calendarRange?.from && (
+          <button
+            type="button"
+            onClick={() => {
+              setCalendarRange(undefined)
+              setValue('checkIn', '', { shouldValidate: true })
+              setValue('checkOut', '', { shouldValidate: true })
+              setActivePopover('checkIn')
+            }}
+            className="mt-2 text-sm font-medium underline text-gray-600 hover:text-black transition-colors"
+          >
+            Bersihkan tanggal
+          </button>
+        )}
         {errors.checkIn && (
           <p className="mt-2 text-sm text-red-500 font-medium">{errors.checkIn.message}</p>
         )}

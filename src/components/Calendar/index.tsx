@@ -1,57 +1,136 @@
 'use client'
 
 import React, { useState } from 'react'
-import { DayPicker, getDefaultClassNames, type DateRange } from 'react-day-picker'
+import { DayPicker, type DateRange } from 'react-day-picker'
 import 'react-day-picker/style.css'
 
 type Props = {
   unavailableDates: Array<{ start: string; end: string }>
   minAdvanceDays: number
   onSelect: (range: DateRange | undefined) => void
-  initialRange?: DateRange
+  selected?: DateRange
+  onDisabledClick?: (date: Date) => void
+  activePopover?: 'checkIn' | 'checkOut' | null
+  numberOfMonths?: number
 }
 
 export function AvailabilityCalendar({
   unavailableDates,
   minAdvanceDays,
   onSelect,
-  initialRange,
+  selected: range,
+  onDisabledClick,
+  activePopover,
+  numberOfMonths = 2,
 }: Props) {
-  const [range, setRange] = useState<DateRange | undefined>(initialRange)
-  const defaultClassNames = getDefaultClassNames()
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
 
-  const disabledDays: Array<{ from: Date; to: Date } | { before: Date }> = [
-    // Past dates + minimum advance days
-    {
-      before: new Date(Date.now() + minAdvanceDays * 24 * 60 * 60 * 1000),
-    },
-    // Unavailable date ranges
-    ...unavailableDates.map((d) => ({
-      from: new Date(d.start),
-      to: new Date(new Date(d.end).getTime() - 24 * 60 * 60 * 1000), // end is exclusive (checkout day)
-    })),
-  ]
+  // Determine if we should show hover preview: check-in is set, no check-out yet, and a date is hovered
+  const isAwaitingCheckout = activePopover === 'checkOut' && range?.from && !range?.to
+  const hoverPreviewEnd = isAwaitingCheckout && hoveredDate && range?.from && hoveredDate > range.from ? hoveredDate : null
+
+  const disabledDays: Array<{ from: Date; to: Date } | { before: Date } | { after: Date } | Date> =
+    [
+      // Past dates + minimum advance days
+      {
+        before: new Date(Date.now() + minAdvanceDays * 24 * 60 * 60 * 1000),
+      },
+      // Unavailable date ranges
+      ...unavailableDates.map((d) => ({
+        from: new Date(d.start),
+        to: new Date(new Date(d.end).getTime() - 24 * 60 * 60 * 1000), // end is exclusive (checkout day)
+      })),
+    ]
+
+  // Airbnb behavior: When picking checkout, disable dates before check-in and dates after the first unavailable date
+  // Only apply when checkout is not yet selected (still picking), not when range is complete (re-selection mode)
+  if (activePopover === 'checkOut' && range?.from && !range?.to) {
+    // Disable dates before check-in
+    disabledDays.push({ before: range.from })
+
+    // Find the first blocked date AFTER the check-in date
+    let firstBlockedAfterCheckIn: Date | null = null
+    const checkInTime = range.from.getTime()
+
+    for (const d of unavailableDates) {
+      const blockedStart = new Date(d.start)
+      if (blockedStart.getTime() > checkInTime) {
+        if (!firstBlockedAfterCheckIn || blockedStart < firstBlockedAfterCheckIn) {
+          firstBlockedAfterCheckIn = blockedStart
+        }
+      }
+    }
+
+    // Disable dates after the first blocked date
+    if (firstBlockedAfterCheckIn) {
+      disabledDays.push({ after: firstBlockedAfterCheckIn })
+    }
+  }
 
   const rangeContainsDisabledDate = (from: Date, to: Date): boolean => {
     for (const d of unavailableDates) {
-      const blockedStart = new Date(`${d.start}T00:00:00`)
-      const blockedEnd = new Date(`${d.end}T00:00:00`)
+      const blockedStart = new Date(d.start)
+      const blockedEnd = new Date(d.end)
       // Overlap check: blocked range [blockedStart, blockedEnd) overlaps [from, to]
       if (blockedStart < to && blockedEnd > from) return true
     }
     return false
   }
 
-  const handleSelect = (newRange: DateRange | undefined) => {
-    // If both dates selected, check if range spans across a disabled date
-    if (newRange?.from && newRange?.to && rangeContainsDisabledDate(newRange.from, newRange.to)) {
-      // Reset to just the new "to" date as a new start
-      setRange({ from: newRange.to, to: undefined })
-      onSelect({ from: newRange.to, to: undefined })
+  const handleDayClick = (day: Date, modifiers: any) => {
+    if (modifiers.disabled) {
+      if (onDisabledClick) onDisabledClick(day)
       return
     }
-    setRange(newRange)
-    onSelect(newRange)
+
+    if (activePopover === 'checkIn') {
+      // User is picking Check-in
+      if (range?.from && day.getTime() === range.from.getTime() && !range?.to) {
+        // Clicked the same check-in date again — clear selection
+        onSelect(undefined)
+      } else {
+        // Always reset check-out when picking a new check-in date
+        onSelect({ from: day, to: undefined })
+      }
+    } else if (activePopover === 'checkOut') {
+      // User is picking Check-out
+      if (!range?.from) {
+        onSelect({ from: day, to: undefined })
+      } else if (range?.to) {
+        // Complete range exists — reset (Airbnb behavior)
+        onSelect({ from: day, to: undefined })
+      } else if (day.getTime() === range.from.getTime()) {
+        // Clicked the same check-in date again — clear selection
+        onSelect(undefined)
+      } else if (day < range.from) {
+        // Picked a date before from -> reset check-in
+        onSelect({ from: day, to: undefined })
+      } else {
+        // Valid checkout
+        if (rangeContainsDisabledDate(range.from, day)) {
+          if (onDisabledClick) onDisabledClick(day)
+        } else {
+          onSelect({ from: range.from, to: day })
+        }
+      }
+    } else {
+      // Fallback
+      onSelect({ from: day, to: undefined })
+    }
+  }
+
+  // Build hover preview modifiers
+  const hoverModifiers: Record<string, (date: Date) => boolean> = {}
+  if (hoverPreviewEnd && range?.from) {
+    const fromTime = range.from.getTime()
+    const hoverTime = hoverPreviewEnd.getTime()
+    hoverModifiers.hover_preview = (date: Date) => {
+      const t = date.getTime()
+      return t > fromTime && t < hoverTime
+    }
+    hoverModifiers.hover_end = (date: Date) => {
+      return date.getTime() === hoverTime
+    }
   }
 
   return (
@@ -59,19 +138,15 @@ export function AvailabilityCalendar({
       <DayPicker
         mode="range"
         selected={range}
-        onSelect={handleSelect}
+        onDayClick={handleDayClick}
+        onDayMouseEnter={(date) => setHoveredDate(date)}
+        onDayMouseLeave={() => setHoveredDate(null)}
         disabled={disabledDays}
-        numberOfMonths={2}
-        showOutsideDays
-        // className="rounded-2xl border border-black/5 bg-[#FAFAFA] p-4 sm:p-6 sm:px-8 w-fit mx-auto"
-        classNames={{
-          today: `font-bold text-[#D8A77B] bg-black`, // Slightly darker brand color for today
-          selected: `bg-[#E8C4A0] text-[#122023] font-semibold `, // Highlight the selected day
-          chevron: `${defaultClassNames.chevron} fill-[#122023]`, // Change the color of the chevron
-          range_start: `bg-[#E8C4A0] text-[#122023] rounded-l-full`,
-          range_end: `bg-[#E8C4A0] text-[#122023] rounded-r-full`,
-          range_middle: `bg-[#E8C4A0]/50 text-[#122023] rounded-none`,
-          day_button: `${defaultClassNames.day_button} transition-colors hover:bg-black/5 disabled:opacity-10 disabled:line-through disabled:hover:bg-transparent disabled:cursor-not-allowed`,
+        numberOfMonths={numberOfMonths}
+        modifiers={hoverModifiers}
+        modifiersClassNames={{
+          hover_preview: 'rdp-hover-preview',
+          hover_end: 'rdp-hover-end',
         }}
       />
     </div>

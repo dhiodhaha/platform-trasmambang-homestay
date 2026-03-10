@@ -274,11 +274,45 @@ Production-ready reliability, performance, and maintainability.
 
 ---
 
-## Phase 6 — Future (No Timeline Yet)
+## Phase 6 — Refinements & Content Dynamics
 
-- Online payment via Midtrans or Xendit
+### Goals
+Move remaining hardcoded content to CMS and add high-value features for guest convenience.
+
+### Tasks
+
+**6.1 Dynamic Content Migration**
+- [ ] Create `faqs` collection and migrate from `src/Landing/components/faq.tsx`
+- [ ] Create `testimonials` collection and migrate from `src/Landing/components/social-proof.tsx`
+- [ ] Create `rooms` collection and migrate from `src/Landing/components/rooms.tsx`
+
+**6.2 Booking Flow Extensions**
+- [ ] Add "Extra Services" to `BookingForm` (Airport Transfer, Breakfast, etc.)
+- [ ] Add `receiptImage` field to `bookings` collection for direct proof upload
+- [ ] Sync mobile sticky bar pricing with `SiteSettings` price global
+
+**6.3 UX & UI Polish**
+- [ ] Add skeleton loaders to `AvailabilityWidget`
+- [ ] Build `NearbyAttractions` landing section
+
+**6.4 Internationalization**
+- [ ] Setup `next-intl` or similar for ID/EN support
+
+**6.5 Reliability & Safety (Anti-Abuse)**
+- [ ] Reduce `MAX_PENDING_PER_PHONE` to 1 in `preventSpam` hook
+- [ ] Update `SiteSettings` default `bookingExpiryHours` to 4 hours
+- [ ] Implement Honeypot in all contact/booking forms
+- [ ] Add "Mark as Spam" action in Payload Admin
+
+**6.6 PTO (Payment Transfer Order) & T&C**
+- [ ] Implement "Terms and Conditions" checkbox in `BookingForm` review step
+- [ ] Add `receiptImage` upload field to `bookings` collection
+- [ ] Build "Proof of Transfer" status UI on confirmation page (Option A, B, or C)
+
+---
+
+## Phase 7 — Future Expansion
+
 - Automated WhatsApp replies (WhatsApp Business API)
 - Email confirmations via Resend
-- Guest review/testimonial system
-- Booking widget embeddable in other pages
 - Cloudflare R2 for media storage (replace local filesystem)

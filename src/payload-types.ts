@@ -202,6 +202,10 @@ export interface Page {
                   relationTo: 'posts';
                   value: number | Post;
                 } | null);
+            /**
+             * Enter the section ID without the # (e.g., "location" or "booking-form")
+             */
+            sectionId?: string | null;
             url?: string | null;
             label: string;
             /**
@@ -497,6 +501,10 @@ export interface CallToActionBlock {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
           /**
@@ -547,6 +555,10 @@ export interface ContentBlock {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
           /**
@@ -1185,6 +1197,7 @@ export interface PagesSelect<T extends boolean = true> {
                     type?: T;
                     newTab?: T;
                     reference?: T;
+                    sectionId?: T;
                     url?: T;
                     label?: T;
                     appearance?: T;
@@ -1231,6 +1244,7 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
               appearance?: T;
@@ -1257,6 +1271,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
               appearance?: T;
@@ -1835,6 +1850,10 @@ export interface Header {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
         };
@@ -1868,6 +1887,10 @@ export interface Footer {
                 relationTo: 'posts';
                 value: number | Post;
               } | null);
+          /**
+           * Enter the section ID without the # (e.g., "location" or "booking-form")
+           */
+          sectionId?: string | null;
           url?: string | null;
           label: string;
         };
@@ -1991,6 +2014,14 @@ export interface LinkTree {
 export interface SiteSetting {
   id: number;
   /**
+   * Matikan untuk menggunakan WhatsApp manual (saat maintenance/full)
+   */
+  isAutomatedBookingEnabled?: boolean | null;
+  /**
+   * Tampilkan tombol WhatsApp melayang di sudut kanan bawah setiap halaman
+   */
+  isWhatsAppFloatingButtonEnabled?: boolean | null;
+  /**
    * Harga per malam (Rupiah)
    */
   pricePerNight: number;
@@ -2018,9 +2049,9 @@ export interface SiteSetting {
   bankAccountNumber?: string | null;
   bankAccountName?: string | null;
   /**
-   * Nomor WA owner (format: 6285xxx)
+   * Nomor WA owner (format: 6285xxx). Digunakan untuk fallback booking dan tombol melayang.
    */
-  whatsappNumber?: string | null;
+  whatsappNumber: string;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2042,6 +2073,7 @@ export interface HeaderSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
             };
@@ -2066,6 +2098,7 @@ export interface FooterSelect<T extends boolean = true> {
               type?: T;
               newTab?: T;
               reference?: T;
+              sectionId?: T;
               url?: T;
               label?: T;
             };
@@ -2138,6 +2171,8 @@ export interface LinkTreeSelect<T extends boolean = true> {
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
+  isAutomatedBookingEnabled?: T;
+  isWhatsAppFloatingButtonEnabled?: T;
   pricePerNight?: T;
   standardCapacity?: T;
   maxCapacity?: T;

@@ -232,9 +232,10 @@ To prevent double bookings when two guests submit overlapping dates simultaneous
 
 ## 10. Pricing
 
-- Flat rate per night (no weekend/weekday difference in Phase 1)
-- Price configured in Payload site settings (owner can update it)
-- Total = number of nights × price per night
+- Base rate per night (configured in Payload site settings)
+- **Weekend/Peak Pricing (Proposed)**: Automatic surcharge for Friday-Sunday stays or specific peak dates.
+- **Extra Services (Proposed)**: Add-on costs for services like airport transfer or breakfast packages.
+- Total = (nights × daily rate) + extra services - discounts
 - No taxes, no service fees in Phase 1
 
 ---
@@ -355,7 +356,9 @@ Booking form → Order Summary section
 
 **To guest — after booking:**
 - Confirmation page at `/booking/[bookingCode]` with bank transfer details and payment deadline
+- **Receipt Upload (Proposed)**: Direct upload of transfer proof image on the confirmation page.
 - WhatsApp link to contact owner with booking code pre-filled
+- Show booking status (PENDING → CONFIRMED → EXPIRED, auto-refreshes)
 
 ### Phase 2 (Future)
 - Automated WhatsApp to guest on confirmation
@@ -381,7 +384,71 @@ The owner (brother) accesses `/admin` (Payload CMS):
 
 ---
 
-## 14. Pages & Routes
+## 14. PTO (Payment Transfer Order) Verification Flows
+
+To ensure reliability and prevent abuse, we propose three "Proof of Transfer" (PTO) flows:
+
+### Option A: The "Direct Upload" Flow (Balanced)
+*   **Flow**: User submits booking -> Dates are blocked (`PENDING`) -> User uploads receipt immediately on the confirmation page -> Owner verifies -> Status becomes `CONFIRMED`.
+*   **Pros**: Automated date blocking, clear next steps for the guest.
+*   **Abuse Prevention**: 4-hour auto-expiry if no receipt is uploaded.
+
+### Option B: The "Strict Hold" Flow (Highest Security)
+*   **Flow**: User submits booking -> User sees a 30-minute timer -> User **MUST** upload a receipt to "Keep the Lock" -> If no receipt within 30 mins, dates are released immediately. Once uploaded, the owner has 4 hours to verify.
+*   **Pros**: Protects the calendar from "evil minds" who just want to block dates without paying.
+*   **Abuse Prevention**: Extremely short block duration for un-vetted requests.
+
+### Option C: The "Pre-Vetting" Flow (Manual High-Touch)
+*   **Flow**: User submits a "Booking Request" -> Dates are **NOT** blocked yet -> Owner receives a WhatsApp "Approve this request?" -> Owner clicks approve -> Client is notified to pay -> Dates only block **AFTER** receipt is uploaded.
+*   **Pros**: Total control for the owner. No one can block the calendar without the owner's permission.
+*   **Cons**: Higher workload for the owner; slower for the guest.
+
+---
+
+## 15. Terms and Conditions (T&C) Placement
+
+We recommend these 3 locations for "Syarat & Ketentuan":
+
+1.  **Placement 1: The Review Screen (Recommended)**
+    *   Add a required checkbox `[ ] Saya setuju dengan Syarat & Ketentuan` right above the "Konfirmasi & Booking" button. This ensures a legal contract is formed at the moment of commitment.
+2.  **Placement 2: Multi-Step Dialog**
+    *   Before entering "Data Tamu" (Step 2), a small modal or drawer appears with the key rules (Check-in time, No smoking, Refund policy) that the user must click "I Understand" to dismiss.
+## 15. PTO (Phone-To-Owner) Verification Flows
+
+To prevent bot abuse and "fake bookings" that block the calendar, we propose 3 "PTO" (Reverse Verification) options:
+
+### Option A: The "Proof of Action" (Recommended)
+- **Flow**: User submits booking -> Confirmation page shows a deep link: "Kirim Kode Verifikasi ke WhatsApp Owner" -> User **MUST** click and send a unique code (e.g. `PTO-X792`) via WhatsApp -> Owner verifies and manually confirms the booking.
+- **Why it works**: Only real humans with WhatsApp can complete this. Bots/fake minds won't bother sending the message.
+- **Auto-Release**: If no message is received within **30 minutes**, the date is released.
+
+### Option B: The "Owner Unlock" (Maximum Safety)
+- **Flow**: User fills form -> Button says "Request Booking" -> Dates are **NOT** blocked yet -> User is redirected to WhatsApp to chat with the owner -> Owner approves in Admin -> Only then the dates are blocked for the guest to pay.
+- **Why it works**: You have 100% control over who blocks your calendar.
+
+### Option C: The "Auto-Vetter" (Semi-Automated)
+- **Flow**: User books -> System sends them an automated WhatsApp (via API) asking for a keyword reply or a "Yes" button click -> If they don't reply in 15 mins, the booking is automatically cancelled.
+
+---
+
+## 16. Terms and Conditions (T&C) Placement
+
+To ensure guests read and agree to your rules, here are 3 placement options:
+
+### Placement 1: The "Legal Lock" (Best for Safety)
+- **Where**: A required checkbox `[ ] Saya setuju dengan Syarat & Ketentuan` right before the "Konfirmasi & Booking" button on the **Review Step**.
+- **UX**: User cannot finish the booking without checking it.
+
+### Placement 2: The "Summary Toast/Strip"
+- **Where**: A small fixed bar at the bottom of the review page saying "Dengan menekan tombol di bawah, Anda menyetujui Aturan Homestay kami (Buka S&K)".
+- **UX**: Less intrusive, but legally binding.
+
+### Placement 3: The "Pre-Entry Modal"
+- **Where**: A popup triggered as soon as they click a date. It shows the "Dos & Don'ts" (e.g. Max guests, No party) that they must close to continue.
+
+---
+
+## 17. Pages & Routes
 
 ### Frontend Pages
 

@@ -1,10 +1,43 @@
 import type { GlobalConfig } from 'payload'
+import { revalidateTag } from 'next/cache'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site Settings',
   access: { read: () => true },
+  hooks: {
+    afterChange: [
+      ({ doc, req: { context } }) => {
+        if (!context.disableRevalidate) {
+          revalidateTag('global_site-settings')
+        }
+        return doc
+      },
+    ],
+  },
   fields: [
+    {
+      type: 'collapsible',
+      label: 'System Toggles',
+      fields: [
+        {
+          name: 'isAutomatedBookingEnabled',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description: 'Matikan untuk menggunakan WhatsApp manual (saat maintenance/full)',
+          },
+        },
+        {
+          name: 'isWhatsAppFloatingButtonEnabled',
+          type: 'checkbox',
+          defaultValue: true,
+          admin: {
+            description: 'Tampilkan tombol WhatsApp melayang di sudut kanan bawah setiap halaman',
+          },
+        },
+      ],
+    },
     {
       type: 'collapsible',
       label: 'Pricing',
@@ -75,7 +108,12 @@ export const SiteSettings: GlobalConfig = {
         {
           name: 'whatsappNumber',
           type: 'text',
-          admin: { description: 'Nomor WA owner (format: 6285xxx)' },
+          required: true,
+          defaultValue: '6285117082122',
+          admin: {
+            description:
+              'Nomor WA owner (format: 6285xxx). Digunakan untuk fallback booking dan tombol melayang.',
+          },
         },
       ],
     },

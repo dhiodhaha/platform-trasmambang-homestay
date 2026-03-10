@@ -1,4 +1,5 @@
 import React from 'react'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import Hero from '@/Landing/components/hero'
 import Intro from '@/Landing/components/intro'
 import Rooms from '@/Landing/components/rooms'
@@ -12,7 +13,12 @@ import BookingProcess from '@/Landing/components/booking-process'
 import FAQ from '@/Landing/components/faq'
 import CTA from '@/Landing/components/cta'
 
-export function LandingView() {
+export async function LandingView() {
+  const settings = await getCachedGlobal('site-settings', 1)()
+
+  const isAutomatedBookingEnabled = settings.isAutomatedBookingEnabled !== false
+  const whatsappNumber = settings.whatsappNumber as string
+
   return (
     <main>
       <Hero />
@@ -25,8 +31,8 @@ export function LandingView() {
       <SocialProof />
       <Location />
       <BookingProcess />
-      <FAQ />
-      <CTA />
+      <FAQ whatsappNumber={whatsappNumber} />
+      <CTA isAutomatedBookingEnabled={isAutomatedBookingEnabled} whatsappNumber={whatsappNumber} />
     </main>
   )
 }

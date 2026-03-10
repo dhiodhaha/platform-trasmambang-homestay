@@ -18,6 +18,7 @@ type CMSLinkType = {
   size?: ButtonProps['size'] | null
   type?: 'custom' | 'reference' | null
   url?: string | null
+  sectionId?: string | null
 }
 
 export const CMSLink: React.FC<CMSLinkType> = (props) => {
@@ -31,13 +32,14 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     reference,
     size: sizeFromProps,
     url,
+    sectionId,
   } = props
 
   const href =
     type === 'reference' && typeof reference?.value === 'object' && reference.value.slug
       ? `${reference?.relationTo !== 'pages' ? `/${reference?.relationTo}` : ''}/${
-          reference.value.slug
-        }`
+          reference.value.slug === 'home' ? '' : reference.value.slug
+        }${sectionId ? `#${sectionId}` : ''}`
       : url
 
   if (!href) return null
