@@ -225,7 +225,7 @@ export default function AvailabilityWidget({
               </div>
 
               {/* Scrollable calendar body */}
-              <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="mobile-calendar-scroll flex-1 overflow-y-auto px-4 py-4">
                 <AvailabilityCalendar
                   unavailableDates={unavailableDates}
                   minAdvanceDays={1}
