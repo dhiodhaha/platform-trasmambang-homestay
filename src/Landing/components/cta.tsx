@@ -8,6 +8,7 @@ import Image from 'next/image'
 import * as React from 'react'
 import { MessageCircle } from 'lucide-react'
 import AvailabilityWidget from './availability-widget'
+import posthog from 'posthog-js'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
@@ -79,6 +80,7 @@ export default function CTA({ isAutomatedBookingEnabled = true, whatsappNumber }
             <Link
               href={`https://wa.me/${whatsappNumber}?text=Halo%2C%20saya%20dari%20website%20trasmambang.com%0A%0ASaya%20mau%20tanya%20detail%20lainnya`}
               target="_blank"
+              onClick={() => posthog.capture('whatsapp_cta_clicked', { location: 'cta_section' })}
               className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/20 backdrop-blur-sm text-white text-xs font-medium uppercase tracking-widest px-6 py-3 hover:bg-white/10 transition-colors"
             >
               <MessageCircle className="w-4 h-4" />

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import posthog from 'posthog-js'
 
 type CouponDiscount = {
   code: string
@@ -37,18 +38,31 @@ export function CouponInput({ nights, onApply, onRemove }: Props) {
 
       if (!res.ok) {
         setError(data.error)
+        posthog.capture('coupon_apply_failed', {
+          coupon_code: code.trim().toUpperCase(),
+          error: data.error,
+          nights,
+        })
         return
       }
 
-      setApplied(code.trim().toUpperCase())
+      const appliedCode = code.trim().toUpperCase()
+      setApplied(appliedCode)
       onApply({
-        code: code.trim().toUpperCase(),
+        code: appliedCode,
         discountType: data.discountType,
         discountValue: data.discountValue,
         maxDiscountAmount: data.maxDiscountAmount,
       })
+      posthog.capture('coupon_applied', {
+        coupon_code: appliedCode,
+        discount_type: data.discountType,
+        discount_value: data.discountValue,
+        nights,
+      })
     } catch {
       setError('Gagal memvalidasi kupon')
+      posthog.captureException(new Error('Coupon validation request failed'))
     } finally {
       setLoading(false)
     }

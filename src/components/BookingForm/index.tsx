@@ -8,6 +8,7 @@ import { bookingFormSchema, type BookingFormData } from '@/lib/validations'
 import { AvailabilityCalendar } from '@/components/Calendar'
 import { CouponInput } from './coupon-input'
 import { OrderSummary } from './order-summary'
+import posthog from 'posthog-js'
 
 type Props = {
   pricePerNight: number
@@ -143,16 +144,36 @@ export function BookingForm({
         }
 
         const message = err?.message || 'Terjadi kesalahan, silakan coba lagi'
+        posthog.capture('booking_submit_failed', {
+          error: message,
+          check_in: formData.checkIn,
+          check_out: formData.checkOut,
+          nights,
+          num_guests: formData.numGuests,
+          final_price: finalPrice,
+        })
         setSubmitError(message)
         return
       }
 
       const booking = await res.json()
+      posthog.capture('booking_submitted', {
+        check_in: formData.checkIn,
+        check_out: formData.checkOut,
+        nights,
+        num_guests: formData.numGuests,
+        total_price: totalPrice,
+        discount_amount: discountAmount,
+        final_price: finalPrice,
+        has_coupon: !!couponDiscount,
+        coupon_code: couponDiscount?.code || null,
+      })
       // Set pending booking cookie
       const maxAge = bookingExpiryHours * 3600
       document.cookie = `pending_booking=${booking.doc.slugId}; path=/; max-age=${maxAge}`
       router.push(`/b/${booking.doc.slugId}`)
-    } catch {
+    } catch (err) {
+      posthog.captureException(err instanceof Error ? err : new Error('Booking submission failed'))
       setSubmitError('Gagal mengirim booking. Periksa koneksi internet Anda.')
     } finally {
       setIsSubmitting(false)
@@ -163,6 +184,15 @@ export function BookingForm({
 
   const handleReviewSubmit = (formData: BookingFormData) => {
     if (!showReview) {
+      posthog.capture('booking_form_reviewed', {
+        check_in: formData.checkIn,
+        check_out: formData.checkOut,
+        nights,
+        num_guests: formData.numGuests,
+        total_price: totalPrice,
+        final_price: finalPrice,
+        has_coupon: !!couponDiscount,
+      })
       setShowReview(true)
       return
     }

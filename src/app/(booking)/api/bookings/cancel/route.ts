@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { NextRequest, NextResponse } from 'next/server'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +36,19 @@ export async function POST(req: NextRequest) {
       id: booking.id,
       data: { bookingStatus: 'cancelled' },
     })
+
+    const posthog = getPostHogClient()
+    posthog.capture({
+      distinctId: booking.phone || slugId,
+      event: 'booking_cancelled_server',
+      properties: {
+        booking_code: booking.bookingCode,
+        slug_id: slugId,
+        guest_name: booking.guestName,
+        final_price: booking.finalPrice,
+      },
+    })
+    await posthog.shutdown()
 
     return NextResponse.json({ success: true })
   } catch {
