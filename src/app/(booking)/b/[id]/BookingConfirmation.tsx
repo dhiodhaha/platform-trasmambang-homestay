@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import posthog from 'posthog-js'
 
 type BookingData = {
   slugId: string
@@ -203,7 +204,15 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
       // 2. Update local state to hide timer and show Success Verification UI
       setLocalPaymentStatus('transfer_sent')
       clearPendingBookingCookie()
+      posthog.capture('transfer_sent_confirmed', {
+        booking_code: booking.bookingCode,
+        final_price: booking.finalPrice,
+        nights,
+        num_guests: booking.numGuests,
+        has_coupon: !!booking.couponCode,
+      })
     } catch (error) {
+      posthog.captureException(error instanceof Error ? error : new Error('Transfer sent update failed'))
       console.error('Failed to update transfer status', error)
       alert('Maaf, ada kendala jaringan. Silakan coba klik tombol lagi dalam beberapa detik.')
     } finally {
@@ -221,6 +230,12 @@ export function BookingConfirmation({ booking, bank, whatsappNumber, expiryHours
         body: JSON.stringify({ slugId: booking.slugId }),
       })
       if (res.ok) {
+        posthog.capture('booking_cancelled', {
+          booking_code: booking.bookingCode,
+          nights,
+          num_guests: booking.numGuests,
+          final_price: booking.finalPrice,
+        })
         clearPendingBookingCookie()
         router.push('/booking')
       } else {

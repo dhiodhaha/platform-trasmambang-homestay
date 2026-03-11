@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover'
 import { Drawer } from 'vaul'
 import { VisuallyHidden } from '@/components/ui/visually-hidden'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import posthog from 'posthog-js'
 
 type UnavailableRange = { start: string; end: string }
 
@@ -119,7 +120,16 @@ export default function AvailabilityWidget({
       // Only check-in set (new selection or auto-reset) — advance to check-out
       setActivePopover('checkOut')
     } else {
-      // Both dates set — keep calendar open for review / third-click reset
+      // Both dates set — capture event
+      const nights = Math.ceil(
+        (newRange.to.getTime() - newRange.from!.getTime()) / (1000 * 60 * 60 * 24),
+      )
+      posthog.capture('booking_dates_selected', {
+        check_in: formatLocalDateForUrl(newRange.from!),
+        check_out: formatLocalDateForUrl(newRange.to),
+        nights,
+        source: 'availability_widget',
+      })
       // On desktop, close popover; on mobile, stay in drawer (user closes manually)
       if (!isMobile) {
         setActivePopover(null)
@@ -152,6 +162,13 @@ export default function AvailabilityWidget({
           {hasBothDates ? (
             <Link
               href={bookingUrl}
+              onClick={() =>
+                posthog.capture('booking_cta_clicked', {
+                  source: 'availability_widget_mobile',
+                  check_in: range?.from ? formatLocalDateForUrl(range.from) : null,
+                  check_out: range?.to ? formatLocalDateForUrl(range.to) : null,
+                })
+              }
               className="shrink-0 flex items-center justify-center bg-[#E8C4A0] hover:bg-[#ddb78f] text-[#122023] rounded-xl px-6 py-3 text-sm font-bold tracking-wide transition-colors"
             >
               Pesan
@@ -378,6 +395,13 @@ export default function AvailabilityWidget({
 
       <Link
         href={bookingUrl}
+        onClick={() =>
+          posthog.capture('booking_cta_clicked', {
+            source: 'availability_widget_desktop',
+            check_in: range?.from ? formatLocalDateForUrl(range.from) : null,
+            check_out: range?.to ? formatLocalDateForUrl(range.to) : null,
+          })
+        }
         className="w-full md:w-auto mt-2 md:mt-0 flex items-center justify-center bg-[#E8C4A0] hover:bg-[#ddb78f] text-[#122023] rounded-full px-8 py-4 transition-all duration-300 md:min-w-[140px] z-10 shadow-sm"
       >
         <span className="text-sm font-bold tracking-wide flex items-center gap-2">

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import posthog from 'posthog-js'
 
 export function CekPesananForm() {
   const router = useRouter()
@@ -25,10 +26,17 @@ export function CekPesananForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.message || 'Terjadi kesalahan, silakan coba lagi.')
+        const errorMsg = data.message || 'Terjadi kesalahan, silakan coba lagi.'
+        setError(errorMsg)
+        posthog.capture('booking_lookup_failed', {
+          error: errorMsg,
+        })
         return
       }
 
+      posthog.capture('booking_lookup_searched', {
+        success: true,
+      })
       router.push(`/b/${data.slugId}`)
     } catch {
       setError('Gagal terhubung ke server. Periksa koneksi internet Anda.')
