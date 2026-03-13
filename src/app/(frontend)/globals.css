@@ -377,7 +377,7 @@ html[data-theme='light'] {
 }
 
 /* If only one date is selected (Check-in only) */
-.rdp-selected:not(.rdp-range_start):not(.rdp-range_end) .rdp-day_button {
+.rdp-selected:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
   background-color: #122023 !important;
   color: #fff !important;
   border-radius: 100% !important;
