@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.local
+.env.prod
+docs/
+test-results/
+playwright-report/
+blob-report/
+*.md
+!README.md
+.DS_Store
+.vscode
+.idea
