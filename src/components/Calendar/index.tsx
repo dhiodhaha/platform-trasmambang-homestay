@@ -25,6 +25,17 @@ export function AvailabilityCalendar({
 }: Props) {
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
 
+  // Parse ISO date string as local midnight, ignoring timezone.
+  // "2024-04-28T05:00:00.000Z" → Apr 28 00:00 local, regardless of user's timezone.
+  // This ensures calendar dates match the homestay's intended dates.
+  const parseDate = (iso: string) => {
+    const [y, m, d] = iso.slice(0, 10).split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+
+  const addDays = (date: Date, days: number) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+
   const isPickingCheckout = activePopover === 'checkOut' && range?.from && !range?.to
   const hoverPreviewEnd =
     isPickingCheckout && hoveredDate && range?.from && hoveredDate > range.from ? hoveredDate : null
@@ -33,18 +44,18 @@ export function AvailabilityCalendar({
     [
       // Past dates + minimum advance days
       {
-        before: new Date(Date.now() + minAdvanceDays * 24 * 60 * 60 * 1000),
+        before: addDays(new Date(), minAdvanceDays),
       },
       // Unavailable date ranges
       ...(unavailableDates
         .map((d) => {
-          const start = new Date(d.start)
-          const end = new Date(new Date(d.end).getTime() - 86400000) // checkout day excluded
+          const start = parseDate(d.start)
+          const end = addDays(parseDate(d.end), -1) // checkout day excluded
 
           // When picking checkout: allow the start date of future bookings as valid checkout
           // (guest checks out at 12:00, next guest checks in at 14:00 — no overlap)
           if (isPickingCheckout && range?.from && start > range.from) {
-            const dayAfter = new Date(start.getTime() + 86400000)
+            const dayAfter = addDays(start, 1)
             if (dayAfter > end) return null // single-night booking: no interior to disable
             return { from: dayAfter, to: end }
           }
@@ -62,11 +73,10 @@ export function AvailabilityCalendar({
 
     // Find the first blocked date AFTER the check-in date
     let firstBlockedAfterCheckIn: Date | null = null
-    const checkInTime = range.from.getTime()
 
     for (const d of unavailableDates) {
-      const blockedStart = new Date(d.start)
-      if (blockedStart.getTime() > checkInTime) {
+      const blockedStart = parseDate(d.start)
+      if (blockedStart > range.from) {
         if (!firstBlockedAfterCheckIn || blockedStart < firstBlockedAfterCheckIn) {
           firstBlockedAfterCheckIn = blockedStart
         }
@@ -81,15 +91,16 @@ export function AvailabilityCalendar({
 
   const rangeContainsDisabledDate = (from: Date, to: Date): boolean => {
     for (const d of unavailableDates) {
-      const blockedStart = new Date(d.start)
-      const blockedEnd = new Date(d.end)
-      // Overlap check: blocked range [blockedStart, blockedEnd) overlaps [from, to]
+      const blockedStart = parseDate(d.start)
+      const blockedEnd = parseDate(d.end)
+      // Night-based overlap: [blockedStart, blockedEnd) vs [from, to)
+      // Both checkout days (to and blockedEnd) are exclusive — guest leaves that morning
       if (blockedStart < to && blockedEnd > from) return true
     }
     return false
   }
 
-  const handleDayClick = (day: Date, modifiers: any) => {
+  const handleDayClick = (day: Date, modifiers: Record<string, boolean>) => {
     if (modifiers.disabled) {
       if (onDisabledClick) onDisabledClick(day)
       return
@@ -150,6 +161,7 @@ export function AvailabilityCalendar({
       <DayPicker
         mode="range"
         selected={range}
+        onSelect={() => {}} // fully controlled — suppress DayPicker's internal range state
         onDayClick={handleDayClick}
         onDayMouseEnter={(date) => setHoveredDate(date)}
         onDayMouseLeave={() => setHoveredDate(null)}
