@@ -1,3 +1,4 @@
+import { s3Storage } from '@payloadcms/storage-s3'
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
@@ -89,4 +90,25 @@ export const plugins: Plugin[] = [
       },
     },
   }),
+  // Cloudflare R2 storage (only in production when R2_BUCKET is set)
+  ...(process.env.R2_BUCKET
+    ? [
+        s3Storage({
+          collections: {
+            media: {
+              prefix: 'media',
+            },
+          },
+          bucket: process.env.R2_BUCKET,
+          config: {
+            endpoint: process.env.R2_ENDPOINT,
+            credentials: {
+              accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+              secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+            },
+            region: 'auto',
+          },
+        }),
+      ]
+    : []),
 ]
