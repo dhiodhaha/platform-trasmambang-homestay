@@ -25,9 +25,9 @@ export function AvailabilityCalendar({
 }: Props) {
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
 
-  // Determine if we should show hover preview: check-in is set, no check-out yet, and a date is hovered
-  const isAwaitingCheckout = activePopover === 'checkOut' && range?.from && !range?.to
-  const hoverPreviewEnd = isAwaitingCheckout && hoveredDate && range?.from && hoveredDate > range.from ? hoveredDate : null
+  const isPickingCheckout = activePopover === 'checkOut' && range?.from && !range?.to
+  const hoverPreviewEnd =
+    isPickingCheckout && hoveredDate && range?.from && hoveredDate > range.from ? hoveredDate : null
 
   const disabledDays: Array<{ from: Date; to: Date } | { before: Date } | { after: Date } | Date> =
     [
@@ -36,15 +36,27 @@ export function AvailabilityCalendar({
         before: new Date(Date.now() + minAdvanceDays * 24 * 60 * 60 * 1000),
       },
       // Unavailable date ranges
-      ...unavailableDates.map((d) => ({
-        from: new Date(d.start),
-        to: new Date(new Date(d.end).getTime() - 24 * 60 * 60 * 1000), // end is exclusive (checkout day)
-      })),
+      ...(unavailableDates
+        .map((d) => {
+          const start = new Date(d.start)
+          const end = new Date(new Date(d.end).getTime() - 86400000) // checkout day excluded
+
+          // When picking checkout: allow the start date of future bookings as valid checkout
+          // (guest checks out at 12:00, next guest checks in at 14:00 — no overlap)
+          if (isPickingCheckout && range?.from && start > range.from) {
+            const dayAfter = new Date(start.getTime() + 86400000)
+            if (dayAfter > end) return null // single-night booking: no interior to disable
+            return { from: dayAfter, to: end }
+          }
+
+          return { from: start, to: end }
+        })
+        .filter(Boolean) as Array<{ from: Date; to: Date }>),
     ]
 
   // Airbnb behavior: When picking checkout, disable dates before check-in and dates after the first unavailable date
   // Only apply when checkout is not yet selected (still picking), not when range is complete (re-selection mode)
-  if (activePopover === 'checkOut' && range?.from && !range?.to) {
+  if (isPickingCheckout && range?.from) {
     // Disable dates before check-in
     disabledDays.push({ before: range.from })
 
