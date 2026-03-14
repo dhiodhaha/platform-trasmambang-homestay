@@ -331,9 +331,11 @@ html[data-theme='light'] {
   background: linear-gradient(90deg, #e8e8e8 50%, transparent 50%) !important;
 }
 
-/* Dark circle on start/end buttons */
+/* Dark circle on start/end buttons (including hover) */
 .rdp-range_start .rdp-day_button,
-.rdp-range_end .rdp-day_button {
+.rdp-range_end .rdp-day_button,
+.rdp-range_start .rdp-day_button:hover,
+.rdp-range_end .rdp-day_button:hover {
   background-color: #122023 !important;
   color: #fff !important;
   border-radius: 100% !important;
