@@ -304,7 +304,7 @@ html[data-theme='light'] {
 
 /* Today: brand amber, bold */
 .rdp-today:not(.rdp-outside) {
-  color: #D8A77B !important;
+  color: #d8a77b !important;
   font-weight: 700 !important;
 }
 
@@ -325,24 +325,17 @@ html[data-theme='light'] {
   background: linear-gradient(90deg, transparent 50%, #e8e8e8 50%) !important;
 }
 
-/* Dark circle on start button */
-.rdp-range_start .rdp-day_button {
-  background-color: #122023 !important;
-  color: #fff !important;
-  border-radius: 100% !important;
-  font-weight: 600 !important;
-  position: relative !important;
-  z-index: 1 !important;
-}
-
 /* === Range end cap === */
 /* Left-half gray gradient (bridge) behind the dark end circle */
 .rdp-range_end:not(.rdp-range_start) {
   background: linear-gradient(90deg, #e8e8e8 50%, transparent 50%) !important;
 }
 
-/* Dark circle on end button */
-.rdp-range_end .rdp-day_button {
+/* Dark circle on start/end buttons (including hover) */
+.rdp-range_start .rdp-day_button,
+.rdp-range_end .rdp-day_button,
+.rdp-range_start .rdp-day_button:hover,
+.rdp-range_end .rdp-day_button:hover {
   background-color: #122023 !important;
   color: #fff !important;
   border-radius: 100% !important;
@@ -359,12 +352,11 @@ html[data-theme='light'] {
 /* === Middle days: flat gray bridge, no circle === */
 .rdp-range_middle {
   background-color: #e8e8e8 !important;
+  border-radius: 0 !important;
 }
 
 .rdp-range_middle .rdp-day_button {
   background: transparent !important;
-  color: #122023 !important;
-  border-radius: 0 !important;
   border: none !important;
   font-weight: 500 !important;
 }
@@ -386,6 +378,14 @@ html[data-theme='light'] {
   transition: background 0.1s ease;
 }
 
+/* If only one date is selected (Check-in only) */
+.rdp-selected:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
+  background-color: #122023 !important;
+  color: #fff !important;
+  border-radius: 100% !important;
+  font-weight: 600 !important;
+}
+
 /* ===== Hover range preview (ghost range) ===== */
 
 .rdp-hover-preview {
@@ -399,5 +399,5 @@ html[data-theme='light'] {
 
 .rdp-hover-end .rdp-day_button {
   border-radius: 100% !important;
-  box-shadow: inset 0 0 0 1.5px #122023 !important;
+  box-shadow: inset 0 0 0 2px #122023 !important; /* Thick, high-contrast dark outline for drop-zone */
 }
